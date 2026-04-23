@@ -13,6 +13,7 @@ const OrderManage = () => import('./components/childrenPages/OrderManage.vue');
 const InfoManage = () => import('./components/childrenPages/InfoManage.vue');
 const FeedbackManage = () => import('./components/childrenPages/FeedbackManage.vue');
 const PublisherOrder = () => import('./components/childrenPages/PublisherOrder.vue');
+const MyGoods = () => import('./components/childrenPages/MyGoods.vue');
 const Register = () => import('./components/pages/Register.vue');
 Vue.use(Router);
 
@@ -88,6 +89,11 @@ const router = new Router({
                     path: '/userCenter/publisherOrder',
                     component: PublisherOrder,
                     name: 'publisherOrder'
+                },
+                {
+                    path: '/userCenter/myGoods',
+                    component: MyGoods,
+                    name: 'myGoods'
                 }
             ]
         },

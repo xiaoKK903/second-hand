@@ -14,10 +14,11 @@
                     <el-dropdown-menu slot="dropdown">
                         <el-dropdown-item command="0">地址管理</el-dropdown-item>
                         <el-dropdown-item command="1">订单管理</el-dropdown-item>
-                        <el-dropdown-item command="2">发布管理</el-dropdown-item>
-                        <el-dropdown-item command="3">修改密码</el-dropdown-item>
-                        <el-dropdown-item command="4">反馈</el-dropdown-item>
-                        <el-dropdown-item command="5">退出</el-dropdown-item>
+                        <el-dropdown-item command="2">我的发布</el-dropdown-item>
+                        <el-dropdown-item command="3">发布管理</el-dropdown-item>
+                        <el-dropdown-item command="4">修改密码</el-dropdown-item>
+                        <el-dropdown-item command="5">反馈</el-dropdown-item>
+                        <el-dropdown-item command="6">退出</el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
             </div>
@@ -66,15 +67,18 @@ export default {
                     this.$router.push({ name: 'orderManage' });
                     break;
                 case 2:
-                    this.$router.push({ name: 'publisherOrder' });
+                    this.$router.push({ name: 'myGoods' });
                     break;
                 case 3:
-                    this.$router.push({ path: '/userCenter/infoManage' });
+                    this.$router.push({ name: 'publisherOrder' });
                     break;
                 case 4:
-                    this.$router.push({ path: '/userCenter/feedbackManage' });
+                    this.$router.push({ path: '/userCenter/infoManage' });
                     break;
                 case 5:
+                    this.$router.push({ path: '/userCenter/feedbackManage' });
+                    break;
+                case 6:
                     this.$cookieStore.delCookie('sid');
                     this.isLogin = false;
                     this.$router.push({ name: 'login' });
