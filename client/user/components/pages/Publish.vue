@@ -275,6 +275,51 @@ export default {
             if (!file.raw) return null;
             return `${file.raw.name}-${file.raw.size}-${file.raw.lastModified || 0}`;
         },
+        compressImage(file, maxWidth = 800, quality = 0.7) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = () => {
+                    const scale = Math.min(maxWidth / img.width, 1);
+                    const width = img.width * scale;
+                    const height = img.height * scale;
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                resolve(e.target.result);
+                            };
+                            reader.readAsDataURL(blob);
+                        } else {
+                            resolve(file.url || '');
+                        }
+                    }, 'image/jpeg', quality);
+                };
+                
+                img.onerror = () => {
+                    resolve(file.url || '');
+                };
+                
+                if (file.url) {
+                    img.src = file.url;
+                } else if (file.raw) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file.raw);
+                } else {
+                    resolve('');
+                }
+            });
+        },
         handleImageChange(file, fileList) {
             if (!file.raw) return;
             
@@ -325,21 +370,28 @@ export default {
             const imageUrls = [];
             for (let i = 0; i < this.fileList.length; i++) {
                 const file = this.fileList[i];
-                if (file.raw && process.env.ALI_OSS_ACCESS_KEY_ID) {
-                    try {
-                        const client = await import('../../config/aliOss.ts').then(m => m.default);
-                        const name = `goods/${Date.now()}_${i}_${file.name}`;
-                        const result = await client.multipartUpload(name, file.raw);
-                        let url = result.res.requestUrls[0];
-                        if (url.indexOf('?') !== -1) {
-                            url = url.substring(0, url.indexOf('?'));
+                try {
+                    // 压缩图片
+                    const compressedUrl = await this.compressImage(file);
+                    if (file.raw && process.env.ALI_OSS_ACCESS_KEY_ID) {
+                        try {
+                            const client = await import('../../config/aliOss.ts').then(m => m.default);
+                            const name = `goods/${Date.now()}_${i}_${file.name}`;
+                            const result = await client.multipartUpload(name, file.raw);
+                            let url = result.res.requestUrls[0];
+                            if (url.indexOf('?') !== -1) {
+                                url = url.substring(0, url.indexOf('?'));
+                            }
+                            imageUrls.push(url);
+                        } catch (e) {
+                            console.error('OSS upload error:', e);
+                            imageUrls.push(compressedUrl);
                         }
-                        imageUrls.push(url);
-                    } catch (e) {
-                        console.error('OSS upload error:', e);
-                        imageUrls.push(file.url || '');
+                    } else {
+                        imageUrls.push(compressedUrl);
                     }
-                } else {
+                } catch (e) {
+                    console.error('Compress error:', e);
                     imageUrls.push(file.url || '');
                 }
             }
