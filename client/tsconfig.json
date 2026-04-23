@@ -1,8 +1,12 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "ES2015",
         "module": "commonjs",
-        "sourceMap": true
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "lib": ["ES2015", "DOM"],
+        "allowSyntheticDefaultImports": true
     },
     "include": ["admin", "types", "user"],
     "exclude": ["node_modules", "dist"]

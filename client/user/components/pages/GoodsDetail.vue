@@ -9,7 +9,7 @@
                                 class="gallery-item"
                                 v-for="(image, index) in images"
                                 :key="index"
-                                :style="{ transform: `translateX(${(currentImageIndex) * -100}%)` }">
+                                :style="{ transform: 'translateX(' + (currentImageIndex * -100) + '%)' }">
                                 <img 
                                     :src="image" 
                                     @click="openImagePreview(currentImageIndex)"
@@ -218,7 +218,7 @@
                         v-model="newComment"
                         type="textarea"
                         :rows="3"
-                        :placeholder="replyTarget ? `回复 @${replyTarget.nickname || '用户'}...` : '说点什么...'"
+                        :placeholder="getPlaceholder()"
                         maxlength="500"
                         show-word-limit
                         resize="none">
@@ -321,21 +321,24 @@ export default {
         },
         formatDate(date) {
             if (!date) return '';
-            const d = new Date(date);
-            const now = new Date();
-            const diff = now - d;
+            var d = new Date(date);
+            var now = new Date();
+            var diff = now - d;
             if (diff < 60000) return '刚刚';
-            if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
-            if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
-            if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            var year = d.getFullYear();
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
         },
         getReplyUser(userId) {
-            const comment = this.comments.find(c => c.user_id === userId);
-            return comment?.nickname || comment?.username || '用户';
+            var comment = this.comments.find(function(c) { return c.user_id === userId; });
+            return (comment && comment.nickname) || (comment && comment.username) || '用户';
         },
         getTagClass(tag) {
-            const classes = {
+            var classes = {
                 '包邮': 'tag-free',
                 '可小刀': 'tag-bargain',
                 '自提': 'tag-self',
@@ -349,7 +352,7 @@ export default {
             if (!this.goods.original_price || !this.goods.goods_price || this.goods.original_price <= 0) {
                 return 0;
             }
-            const discount = (this.goods.goods_price / this.goods.original_price * 10).toFixed(1);
+            var discount = (this.goods.goods_price / this.goods.original_price * 10).toFixed(1);
             return discount;
         },
         handleImageError(event) {
@@ -374,63 +377,64 @@ export default {
             this.imagePreviewVisible = true;
         },
         getGoodsById() {
-            this.axios.get('/site/findGoods/' + this.id).then(res => {
-                this.goods = res.data[0] || {};
-                this.images = [];
+            var that = this;
+            this.axios.get('/site/findGoods/' + this.id).then(function(res) {
+                that.goods = res.data[0] || {};
+                that.images = [];
                 
-                if (this.goods.goods_images && this.goods.goods_images.length > 0) {
-                    if (typeof this.goods.goods_images === 'string') {
+                if (that.goods.goods_images && that.goods.goods_images.length > 0) {
+                    if (typeof that.goods.goods_images === 'string') {
                         try {
-                            this.images = JSON.parse(this.goods.goods_images);
+                            that.images = JSON.parse(that.goods.goods_images);
                         } catch (e) {
-                            this.images = [];
+                            that.images = [];
                         }
                     } else {
-                        this.images = this.goods.goods_images;
+                        that.images = that.goods.goods_images;
                     }
                 }
                 
-                if (this.goods.goods_image && !this.images.includes(this.goods.goods_image)) {
-                    this.images.unshift(this.goods.goods_image);
+                if (that.goods.goods_image && !that.images.includes(that.goods.goods_image)) {
+                    that.images.unshift(that.goods.goods_image);
                 }
                 
-                if (this.images.length === 0 && this.goods.goods_image) {
-                    this.images = [this.goods.goods_image];
+                if (that.images.length === 0 && that.goods.goods_image) {
+                    that.images = [that.goods.goods_image];
                 }
                 
-                if (this.images.length === 0) {
-                    this.images = [this.defaultImage];
+                if (that.images.length === 0) {
+                    that.images = [that.defaultImage];
                 }
                 
-                if (this.goods.tags) {
-                    if (typeof this.goods.tags === 'string') {
+                if (that.goods.tags) {
+                    if (typeof that.goods.tags === 'string') {
                         try {
-                            this.goodsTags = JSON.parse(this.goods.tags);
+                            that.goodsTags = JSON.parse(that.goods.tags);
                         } catch (e) {
-                            this.goodsTags = [];
+                            that.goodsTags = [];
                         }
                     } else {
-                        this.goodsTags = this.goods.tags;
+                        that.goodsTags = that.goods.tags;
                     }
                 }
                 
-                if (this.goods.user_id) {
-                    this.getSellerInfo(this.goods.user_id);
+                if (that.goods.user_id) {
+                    that.getSellerInfo(that.goods.user_id);
                 }
-            }, err => {
+            }, function(err) {
                 console.error(err);
             });
             
-            this.axios.get('/site/getImages/' + this.id).then(res => {
+            this.axios.get('/site/getImages/' + this.id).then(function(res) {
                 if (res.data && res.data.length > 0) {
-                    const newImages = res.data.map(item => item.image_url);
-                    newImages.forEach(img => {
-                        if (!this.images.includes(img)) {
-                            this.images.push(img);
+                    var newImages = res.data.map(function(item) { return item.image_url; });
+                    newImages.forEach(function(img) {
+                        if (!that.images.includes(img)) {
+                            that.images.push(img);
                         }
                     });
                 }
-            }, err => {
+            }, function(err) {
                 console.error(err);
             });
             
@@ -438,53 +442,60 @@ export default {
             this.checkFavorite();
         },
         getSellerInfo(userId) {
-            this.axios.get('/site/user/' + userId).then(res => {
-                this.sellerInfo = res.data[0] || {};
-            }, err => {
+            var that = this;
+            this.axios.get('/site/user/' + userId).then(function(res) {
+                that.sellerInfo = res.data[0] || {};
+            }, function(err) {
                 console.error(err);
             });
         },
         getComments() {
-            this.axios.get('/goods/' + this.id + '/comments').then(res => {
-                this.comments = res.data || [];
-            }, err => {
+            var that = this;
+            this.axios.get('/goods/' + this.id + '/comments').then(function(res) {
+                that.comments = res.data || [];
+            }, function(err) {
                 console.error('获取留言失败:', err);
-                this.comments = [];
+                that.comments = [];
             });
         },
         checkFavorite() {
-            const uid = this.$cookieStore.getCookie('sid');
+            var uid = this.$cookieStore.getCookie('sid');
             if (!uid) return;
-            this.axios.get('/user/favoriteGoods', { params: { uid } }).then(res => {
+            var that = this;
+            this.axios.get('/user/favoriteGoods', { params: { uid } }).then(function(res) {
                 if (res.data && res.data.data) {
-                    this.isFavorited = res.data.data.some(item => item.goods_id === Number(this.id));
+                    that.isFavorited = res.data.data.some(function(item) { 
+                        return item.goods_id === Number(that.id); 
+                    });
                 }
-            }, err => {
+            }, function(err) {
                 console.error(err);
             });
         },
         toggleFavorite() {
-            const uid = this.$cookieStore.getCookie('sid');
+            var uid = this.$cookieStore.getCookie('sid');
             if (!uid) {
+                var that = this;
                 this.$confirm('您还未登录, 是否去登录?', '提示', {
                     confirmButtonText: '确定',
                     type: 'warning'
-                }).then(() => {
-                    this.$router.push({ name: 'login' });
-                }).catch(() => {});
+                }).then(function() {
+                    that.$router.push({ name: 'login' });
+                }).catch(function() {});
                 return;
             }
-            const action = this.isFavorited ? 'unfavorite' : 'favorite';
-            this.axios.post(`/user/${action}/${this.id}`, { uid }).then(res => {
+            var action = this.isFavorited ? 'unfavorite' : 'favorite';
+            var that2 = this;
+            this.axios.post('/user/' + action + '/' + this.id, { uid: uid }).then(function(res) {
                 if (res.data.success) {
-                    this.isFavorited = !this.isFavorited;
-                    this.$message({
-                        message: this.isFavorited ? '收藏成功' : '已取消收藏',
+                    that2.isFavorited = !that2.isFavorited;
+                    that2.$message({
+                        message: that2.isFavorited ? '收藏成功' : '已取消收藏',
                         type: 'success'
                     });
                 }
-            }, err => {
-                this.$message({
+            }, function(err) {
+                that2.$message({
                     message: '操作失败',
                     type: 'error'
                 });
@@ -510,74 +521,78 @@ export default {
             });
         },
         scrollToComments() {
-            const section = document.getElementById('comments-section');
+            var section = document.getElementById('comments-section');
             if (section) {
                 section.scrollIntoView({ behavior: 'smooth' });
             }
         },
         addToCart() {
             if (this.$cookieStore.getCookie('sid')) {
-                let uid = this.$cookieStore.getCookie('sid'),
+                var uid = this.$cookieStore.getCookie('sid'),
                     gid = this.goods.goods_id,
                     count = this.num;
+                var that = this;
                 this.axios.post('/site/addToCart', {
                     uid: uid,
                     gid: gid,
                     count: count
-                }).then(res => {
-                    this.$notify({
+                }).then(function(res) {
+                    that.$notify({
                         title: '成功',
                         message: '加入购物车成功！',
                         type: 'success'
                     });
-                }, err => {
+                }, function(err) {
                     console.error(err);
-                    this.$notify({
+                    that.$notify({
                         title: '失败',
                         message: '加入购物车失败！',
                         type: 'danger'
                     });
-                })
+                });
             } else {
+                var that2 = this;
                 this.$confirm('您还未登录, 是否去登录?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning'
-                }).then(() => {
-                    this.$router.push({ name: 'login' });
-                }).catch(() => {});
+                }).then(function() {
+                    that2.$router.push({ name: 'login' });
+                }).catch(function() {});
             }
         },
         purchase() {
             if (this.$cookieStore.getCookie('sid')) {
-                let goods = {
+                var goods = {
                     goods_id: this.goods.goods_id,
                     goods_image: this.goods.goods_image,
                     goods_name: this.goods.goods_name,
                     goods_price: this.goods.goods_price,
                     count: this.num
-                }
+                };
                 this.$store.commit('clearGoodsList');
-                this.$store.commit('addGoods', { goods });
+                this.$store.commit('addGoods', { goods: goods });
                 sessionStorage.setItem('store', JSON.stringify(this.$store.state));
                 this.$router.push({ 
                     name: 'order'
                 });
             } else {
+                var that = this;
                 this.$confirm('您还未登录, 是否去登录?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning'
-                }).then(() => {
-                    this.$router.push({ name: 'login' });
-                }).catch(() => {});
+                }).then(function() {
+                    that.$router.push({ name: 'login' });
+                }).catch(function() {});
             }
         },
         replyToComment(comment) {
             this.replyTarget = comment;
-            this.newComment = `@${comment.nickname || '用户'} `;
-            this.$nextTick(() => {
-                const textarea = document.querySelector('.comment-input-box textarea');
+            this.newComment = '@' + (comment.nickname || '用户') + ' ';
+            var that = this;
+            this.$nextTick(function() {
+                var textarea = document.querySelector('.comment-input-box textarea');
                 if (textarea) {
                     textarea.focus();
                     textarea.selectionStart = textarea.value.length;
@@ -590,49 +605,59 @@ export default {
             this.replyTarget = null;
             this.newComment = '';
         },
+        getPlaceholder() {
+            if (this.replyTarget) {
+                return '回复 @' + (this.replyTarget.nickname || '用户') + '...';
+            }
+            return '说点什么...';
+        },
         submitComment() {
             if (!this.newComment.trim()) return;
             
-            const uid = this.$cookieStore.getCookie('sid');
+            var uid = this.$cookieStore.getCookie('sid');
             if (!uid) {
+                var that = this;
                 this.$confirm('您还未登录, 是否去登录?', '提示', {
                     confirmButtonText: '确定',
                     type: 'warning'
-                }).then(() => {
-                    this.$router.push({ name: 'login' });
-                }).catch(() => {});
+                }).then(function() {
+                    that.$router.push({ name: 'login' });
+                }).catch(function() {});
                 return;
             }
             
             this.submitting = true;
             
-            this.axios.post(`/goods/${this.id}/comment`, {
-                uid,
+            var commentData = {
+                uid: uid,
                 content: this.newComment,
-                reply_to: this.replyTarget?.user_id,
-                parent_comment_id: this.replyTarget?.comment_id
-            }).then(res => {
+                reply_to: this.replyTarget && this.replyTarget.user_id,
+                parent_comment_id: this.replyTarget && this.replyTarget.comment_id
+            };
+            var that2 = this;
+            
+            this.axios.post('/goods/' + this.id + '/comment', commentData).then(function(res) {
                 if (res.data.success) {
-                    this.$message({
+                    that2.$message({
                         message: '留言成功',
                         type: 'success'
                     });
-                    this.newComment = '';
-                    this.replyTarget = null;
-                    this.getComments();
+                    that2.newComment = '';
+                    that2.replyTarget = null;
+                    that2.getComments();
                 } else {
-                    this.$message({
+                    that2.$message({
                         message: res.data.msg || '留言失败',
                         type: 'error'
                     });
                 }
-            }, err => {
-                this.$message({
+            }, function(err) {
+                that2.$message({
                     message: '留言失败，请稍后重试',
                     type: 'error'
                 });
-            }).finally(() => {
-                this.submitting = false;
+            }).finally(function() {
+                that2.submitting = false;
             });
         },
         sendChat() {
@@ -644,21 +669,22 @@ export default {
             this.chatMessage = '';
         },
         initTouchEvents() {
-            const container = this.$refs.galleryContainer;
+            var container = this.$refs.galleryContainer;
             if (!container) return;
+            var that = this;
             
-            container.addEventListener('touchstart', (e) => {
-                this.touchStartX = e.changedTouches[0].screenX;
+            container.addEventListener('touchstart', function(e) {
+                that.touchStartX = e.changedTouches[0].screenX;
             }, { passive: true });
             
-            container.addEventListener('touchend', (e) => {
-                this.touchEndX = e.changedTouches[0].screenX;
-                this.handleSwipe();
+            container.addEventListener('touchend', function(e) {
+                that.touchEndX = e.changedTouches[0].screenX;
+                that.handleSwipe();
             }, { passive: true });
         },
         handleSwipe() {
-            const diff = this.touchStartX - this.touchEndX;
-            const threshold = 50;
+            var diff = this.touchStartX - this.touchEndX;
+            var threshold = 50;
             
             if (Math.abs(diff) > threshold) {
                 if (diff > 0) {
