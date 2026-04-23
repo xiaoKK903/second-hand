@@ -1,9 +1,9 @@
 const CommentService = require('../service/CommentService.ts');
 
 module.exports = {
-    getComments: async (ctx, next) => {
+    getComments: async function(ctx, next) {
         await next();
-        const goods_id = ctx.params.id || ctx.request.query.goods_id;
+        var goods_id = ctx.params.id || ctx.request.query.goods_id;
         
         if (!goods_id) {
             ctx.response.type = 'utf-8';
@@ -11,19 +11,19 @@ module.exports = {
             return;
         }
         
-        const comments = await CommentService.getCommentsByGoodsId(goods_id);
+        var comments = await CommentService.getCommentsByGoodsId(goods_id);
         ctx.response.type = 'utf-8';
         ctx.response.body = comments;
     },
 
-    addComment: async (ctx, next) => {
+    addComment: async function(ctx, next) {
         await next();
-        const body = ctx.request.body;
-        const goods_id = ctx.params.id || body.goods_id;
-        const user_id = body.uid;
-        const content = body.content;
-        const reply_to = body.reply_to;
-        const parent_comment_id = body.parent_comment_id;
+        var body = ctx.request.body;
+        var goods_id = ctx.params.id || body.goods_id;
+        var user_id = body.uid;
+        var content = body.content;
+        var reply_to = body.reply_to;
+        var parent_comment_id = body.parent_comment_id;
         
         if (!goods_id) {
             ctx.response.type = 'utf-8';
@@ -43,12 +43,12 @@ module.exports = {
             return;
         }
         
-        const comment = await CommentService.addComment({
-            goods_id,
-            user_id,
+        var comment = await CommentService.addComment({
+            goods_id: goods_id,
+            user_id: user_id,
             content: content.trim(),
-            reply_to,
-            parent_comment_id
+            reply_to: reply_to,
+            parent_comment_id: parent_comment_id
         });
         
         ctx.response.type = 'utf-8';
@@ -59,10 +59,10 @@ module.exports = {
         };
     },
 
-    deleteComment: async (ctx, next) => {
+    deleteComment: async function(ctx, next) {
         await next();
-        const comment_id = ctx.params.comment_id;
-        const uid = ctx.request.query.uid || ctx.request.body.uid;
+        var comment_id = ctx.params.comment_id;
+        var uid = ctx.request.query.uid || ctx.request.body.uid;
         
         if (!uid) {
             ctx.response.type = 'utf-8';
@@ -76,18 +76,18 @@ module.exports = {
             return;
         }
         
-        const result = await CommentService.deleteComment(comment_id, uid);
+        var result = await CommentService.deleteComment(comment_id, uid);
         
         ctx.response.type = 'utf-8';
         ctx.response.body = {
-            success: result[0] > 0,
-            msg: result[0] > 0 ? '删除成功' : '删除失败'
+            success: result > 0,
+            msg: result > 0 ? '删除成功' : '删除失败'
         };
     },
 
-    getCommentsCount: async (ctx, next) => {
+    getCommentsCount: async function(ctx, next) {
         await next();
-        const goods_id = ctx.params.id || ctx.request.query.goods_id;
+        var goods_id = ctx.params.id || ctx.request.query.goods_id;
         
         if (!goods_id) {
             ctx.response.type = 'utf-8';
@@ -95,8 +95,8 @@ module.exports = {
             return;
         }
         
-        const count = await CommentService.getCommentsCount(goods_id);
+        var count = await CommentService.getCommentsCount(goods_id);
         ctx.response.type = 'utf-8';
-        ctx.response.body = { success: true, count };
+        ctx.response.body = { success: true, count: count };
     }
 };
