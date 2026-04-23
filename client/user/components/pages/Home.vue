@@ -50,10 +50,15 @@
                 <div class="goods-item" v-for="goods in goodsList" :key="goods.goods_id">
                     <goods-card 
                         :price="goods.goods_price" 
+                        :originalPrice="goods.original_price"
                         :name="goods.goods_name" 
                         :desc="goods.goods_desc" 
                         :imgUrl="goods.goods_image"
-                        :id="goods.goods_id">
+                        :id="goods.goods_id"
+                        :condition="goods.condition"
+                        :tags="goods.tags"
+                        :views="goods.views"
+                        :imagesCount="getImagesCount(goods)">
                     </goods-card>
                 </div>
             </div>
@@ -115,6 +120,14 @@ export default {
         getCategoryName(categoryId) {
             const category = this.categoryList.find(c => c.category_id === categoryId);
             return category ? category.goods_type : '';
+        },
+        getImagesCount(goods) {
+            let count = 0;
+            if (goods.goods_image) count++;
+            if (goods.goods_images && Array.isArray(goods.goods_images)) {
+                count += goods.goods_images.length;
+            }
+            return Math.max(count, 1);
         },
         getGoodsByKind(categoryNum) {
             this.categoryNum = categoryNum;

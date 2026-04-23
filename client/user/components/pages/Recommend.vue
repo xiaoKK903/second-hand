@@ -27,10 +27,15 @@
                     </div>
                     <goods-card 
                         :price="goods.goods_price" 
+                        :originalPrice="goods.original_price"
                         :name="goods.goods_name" 
                         :desc="goods.goods_desc" 
                         :imgUrl="goods.goods_image"
-                        :id="goods.goods_id">
+                        :id="goods.goods_id"
+                        :condition="goods.condition"
+                        :tags="goods.tags"
+                        :views="goods.views"
+                        :imagesCount="getImagesCount(goods)">
                     </goods-card>
                 </div>
             </div>
@@ -76,6 +81,14 @@ export default {
         },
         isHotCategory(type) {
             return ['书籍教材', '电子产品'].includes(type);
+        },
+        getImagesCount(goods) {
+            let count = 0;
+            if (goods.goods_image) count++;
+            if (goods.goods_images && Array.isArray(goods.goods_images)) {
+                count += goods.goods_images.length;
+            }
+            return Math.max(count, 1);
         },
         getCategory() {
             this.axios.get('/site/category').then(res => {
