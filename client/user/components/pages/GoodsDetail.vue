@@ -1,36 +1,54 @@
 <template>
     <div class="goods-detail-page">
         <div class="detail-container">
-            <div class="main-content">
-                <div class="gallery-section">
+            <div class="gallery-section">
+                <div class="gallery-wrapper" v-if="images.length > 0">
                     <div class="gallery-main">
-                        <div class="gallery-image-wrapper" v-if="images.length > 0">
-                            <img 
-                                :src="images[currentImageIndex]" 
-                                @click="openImagePreview(currentImageIndex)"
-                                @error="handleImageError($event)">
-                            <div class="gallery-nav">
-                                <div 
-                                    class="nav-btn prev"
-                                    @click="prevImage"
-                                    v-if="images.length > 1">
-                                    <i class="el-icon-arrow-left"></i>
-                                </div>
-                                <div 
-                                    class="nav-btn next"
-                                    @click="nextImage"
-                                    v-if="images.length > 1">
-                                    <i class="el-icon-arrow-right"></i>
-                                </div>
-                            </div>
-                            <div class="gallery-counter">
-                                {{ currentImageIndex + 1 }} / {{ images.length }}
+                        <div class="gallery-container" ref="galleryContainer">
+                            <div 
+                                class="gallery-item"
+                                v-for="(image, index) in images"
+                                :key="index"
+                                :style="{ transform: `translateX(${(currentImageIndex) * -100}%)` }">
+                                <img 
+                                    :src="image" 
+                                    @click="openImagePreview(currentImageIndex)"
+                                    @error="handleImageError($event)">
                             </div>
                         </div>
-                        <div class="gallery-placeholder" v-else>
-                            <img :src="defaultImage" @error="handleImageError($event)">
+                        
+                        <div class="gallery-nav" v-if="images.length > 1">
+                            <div 
+                                class="nav-btn prev"
+                                @click="prevImage"
+                                :class="{ disabled: currentImageIndex === 0 }">
+                                <i class="el-icon-arrow-left"></i>
+                            </div>
+                            <div 
+                                class="nav-btn next"
+                                @click="nextImage"
+                                :class="{ disabled: currentImageIndex === images.length - 1 }">
+                                <i class="el-icon-arrow-right"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="gallery-counter" v-if="images.length > 0">
+                            <span class="current">{{ currentImageIndex + 1 }}</span>
+                            <span class="separator">/</span>
+                            <span class="total">{{ images.length }}</span>
+                        </div>
+                        
+                        <div class="gallery-dots" v-if="images.length > 1">
+                            <span 
+                                class="dot"
+                                :class="{ active: index === currentImageIndex }"
+                                v-for="(image, index) in images"
+                                :key="index"
+                                @click="currentImageIndex = index">
+                            </span>
                         </div>
                     </div>
+                    
                     <div class="gallery-thumbs" v-if="images.length > 1">
                         <div 
                             class="thumb-item"
@@ -42,157 +60,176 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="gallery-placeholder" v-else>
+                    <img :src="defaultImage" @error="handleImageError($event)">
+                    <p class="placeholder-text">暂无商品图片</p>
+                </div>
+            </div>
 
-                <div class="info-section">
-                    <div class="price-area">
-                        <div class="price-main">
+            <div class="info-section">
+                <div class="price-area">
+                    <div class="price-left">
+                        <div class="price-row">
                             <span class="price-symbol">¥</span>
                             <span class="price-value">{{ formatPrice(goods.goods_price) }}</span>
                             <div class="original-price" v-if="goods.original_price && goods.original_price > goods.goods_price">
-                                <span class="original-label">原价</span>
                                 <span class="original-value">¥{{ formatPrice(goods.original_price) }}</span>
                                 <span class="discount-badge">{{ getDiscount() }}折</span>
                             </div>
                         </div>
-                        <div class="condition-badge" v-if="goods.condition">
-                            <span class="condition-icon">{{ getConditionIcon(goods.condition) }}</span>
-                            <span class="condition-text">{{ goods.condition }}</span>
+                    </div>
+                    <div class="condition-badge" v-if="goods.condition">
+                        <span class="condition-text">{{ goods.condition }}</span>
+                    </div>
+                </div>
+
+                <div class="title-area">
+                    <h1 class="goods-title">{{ goods.goods_name }}</h1>
+                    <div class="goods-tags" v-if="goodsTags.length > 0">
+                        <span 
+                            class="tag-item"
+                            :class="getTagClass(tag)"
+                            v-for="tag in goodsTags"
+                            :key="tag">
+                            {{ tag }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <i class="el-icon-view"></i>
+                        <span>{{ formatViews(goods.views || 0) }} 人浏览</span>
+                    </div>
+                    <div class="stat-item" v-if="goods.created_at">
+                        <i class="el-icon-time"></i>
+                        <span>{{ formatDate(goods.created_at) }} 发布</span>
+                    </div>
+                    <div class="stat-item" v-if="goods.count">
+                        <i class="el-icon-goods"></i>
+                        <span>库存 {{ goods.count }} 件</span>
+                    </div>
+                </div>
+
+                <div class="seller-card" @click="goToSeller">
+                    <div class="seller-avatar">
+                        <img :src="sellerInfo.avatar || defaultAvatar" @error="handleAvatarError($event)">
+                    </div>
+                    <div class="seller-info-box">
+                        <div class="seller-name">
+                            {{ sellerInfo.nickname || sellerInfo.username || '卖家' }}
+                            <el-tag v-if="sellerInfo.verified" type="success" size="mini">已认证</el-tag>
+                        </div>
+                        <div class="seller-stats">
+                            <span>在售 {{ sellerInfo.goodsCount || 0 }} 件</span>
+                            <span class="divider">|</span>
+                            <span>粉丝 {{ sellerInfo.fans || 0 }}</span>
                         </div>
                     </div>
+                    <i class="el-icon-arrow-right arrow-icon"></i>
+                </div>
 
-                    <div class="title-area">
-                        <h1 class="goods-title">{{ goods.goods_name }}</h1>
-                        <div class="goods-tags" v-if="goodsTags.length > 0">
-                            <span 
-                                class="tag-item"
-                                :class="getTagClass(tag)"
-                                v-for="tag in goodsTags"
-                                :key="tag">
-                                <span class="tag-icon">{{ getTagIcon(tag) }}</span>
-                                {{ tag }}
+                <div class="desc-section" v-if="goods.goods_desc">
+                    <div class="section-header">
+                        <span class="section-title">商品详情</span>
+                    </div>
+                    <div class="desc-content">
+                        <p>{{ goods.goods_desc }}</p>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <div class="action-left">
+                        <div class="action-btn" :class="{ active: isFavorited }" @click="toggleFavorite">
+                            <i :class="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
+                            <span>{{ isFavorited ? '已收藏' : '收藏' }}</span>
+                        </div>
+                        <div class="action-btn" @click="shareGoods">
+                            <i class="el-icon-share"></i>
+                            <span>分享</span>
+                        </div>
+                        <div class="action-btn" @click="scrollToComments">
+                            <i class="el-icon-chat-dot-round"></i>
+                            <span>留言</span>
+                            <span class="comment-badge" v-if="comments.length > 0">{{ comments.length }}</span>
+                        </div>
+                    </div>
+                    <div class="action-right">
+                        <el-button class="cart-btn" @click="addToCart">
+                            <i class="el-icon-shopping-cart-2"></i>
+                            加入购物车
+                        </el-button>
+                        <el-button type="primary" class="buy-btn" @click="purchase">
+                            立即购买
+                        </el-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comments-section" id="comments-section" v-if="showComments">
+            <div class="section-header">
+                <span class="section-title">留言咨询</span>
+                <span class="comment-count">{{ comments.length }} 条留言</span>
+            </div>
+
+            <div class="comment-list" v-if="comments.length > 0">
+                <div class="comment-item" v-for="(comment, index) in comments" :key="comment.comment_id || index">
+                    <div class="comment-avatar">
+                        <img :src="comment.avatar || defaultAvatar" @error="handleAvatarError($event)">
+                    </div>
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <span class="comment-user">
+                                {{ comment.nickname || comment.username || '用户' }}
+                                <el-tag v-if="comment.user_id === goods.user_id" type="warning" size="mini" effect="dark">卖家</el-tag>
                             </span>
+                            <span class="comment-time">{{ formatDate(comment.created_at) }}</span>
                         </div>
-                    </div>
-
-                    <div class="stats-area">
-                        <div class="stat-item">
-                            <i class="el-icon-view"></i>
-                            <span>{{ goods.views || 0 }} 人浏览</span>
+                        <div class="comment-text">
+                            <span v-if="comment.reply_to" class="reply-prefix">
+                                回复 @{{ getReplyUser(comment.reply_to) }}: 
+                            </span>
+                            {{ comment.content }}
                         </div>
-                        <div class="stat-item" v-if="goods.created_at">
-                            <i class="el-icon-time"></i>
-                            <span>{{ formatDate(goods.created_at) }} 发布</span>
-                        </div>
-                    </div>
-
-                    <div class="seller-area">
-                        <div class="seller-info" @click="goToSeller">
-                            <div class="seller-avatar">
-                                <img :src="sellerInfo.avatar || defaultAvatar" @error="handleAvatarError($event)">
-                            </div>
-                            <div class="seller-detail">
-                                <div class="seller-name">
-                                    {{ sellerInfo.nickname || sellerInfo.username || '卖家' }}
-                                    <el-tag v-if="sellerInfo.verified" type="success" size="mini">已认证</el-tag>
-                                </div>
-                                <div class="seller-stats">
-                                    <span>在售 {{ sellerInfo.goodsCount || 0 }} 件</span>
-                                    <span class="stat-divider">·</span>
-                                    <span>粉丝 {{ sellerInfo.fans || 0 }}</span>
-                                </div>
-                            </div>
-                            <i class="el-icon-arrow-right seller-arrow"></i>
-                        </div>
-                        <div class="seller-actions">
-                            <el-button class="contact-btn" @click="showChat = true">
+                        <div class="comment-actions">
+                            <span class="action-link" @click="replyToComment(comment)">
                                 <i class="el-icon-chat-dot-round"></i>
-                                联系卖家
-                            </el-button>
-                            <el-button class="follow-btn" :type="isFollowed ? '' : 'primary'" @click="toggleFollow">
-                                <i :class="isFollowed ? 'el-icon-check' : 'el-icon-plus'"></i>
-                                {{ isFollowed ? '已关注' : '关注' }}
-                            </el-button>
-                        </div>
-                    </div>
-
-                    <div class="desc-area" v-if="goods.goods_desc">
-                        <div class="section-header">
-                            <span class="section-title">商品详情</span>
-                        </div>
-                        <div class="desc-content">
-                            <p>{{ goods.goods_desc }}</p>
-                        </div>
-                    </div>
-
-                    <div class="action-bar">
-                        <div class="action-left">
-                            <div class="action-btn" :class="{ active: isFavorited }" @click="toggleFavorite">
-                                <i :class="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
-                                <span>{{ isFavorited ? '已收藏' : '收藏' }}</span>
-                            </div>
-                            <div class="action-btn" @click="shareGoods">
-                                <i class="el-icon-share"></i>
-                                <span>分享</span>
-                            </div>
-                        </div>
-                        <div class="action-right">
-                            <el-button class="cart-btn" @click="addToCart">
-                                <i class="el-icon-shopping-cart-2"></i>
-                                加入购物车
-                            </el-button>
-                            <el-button type="primary" class="buy-btn" @click="purchase">
-                                立即购买
-                            </el-button>
+                                回复
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="comments-section" v-if="showComments">
-                <div class="section-header">
-                    <span class="section-title">留言咨询</span>
-                    <span class="comment-count">({{ comments.length }})</span>
-                </div>
+            <div class="empty-comments" v-else>
+                <div class="empty-icon">💬</div>
+                <div class="empty-text">快来抢沙发，第一个留言吧～</div>
+            </div>
 
-                <div class="comment-list" v-if="comments.length > 0">
-                    <div class="comment-item" v-for="(comment, index) in comments" :key="index">
-                        <div class="comment-avatar">
-                            <img :src="comment.avatar || defaultAvatar" @error="handleAvatarError($event)">
-                        </div>
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <span class="comment-user">
-                                    {{ comment.nickname || comment.username || '用户' }}
-                                    <el-tag v-if="comment.user_id === goods.user_id" type="warning" size="mini" effect="dark">卖家</el-tag>
-                                </span>
-                                <span class="comment-time">{{ formatDate(comment.created_at) }}</span>
-                            </div>
-                            <div class="comment-text">{{ comment.content }}</div>
-                            <div class="comment-reply" @click="replyTo(comment)">
-                                <i class="el-icon-chat-dot-round"></i>
-                                回复
-                            </div>
-                        </div>
-                    </div>
+            <div class="comment-input-box">
+                <div class="reply-indicator" v-if="replyTarget">
+                    <span class="reply-text">回复 @{{ replyTarget.nickname || '用户' }}</span>
+                    <i class="el-icon-close close-btn" @click="cancelReply"></i>
                 </div>
-
-                <div class="empty-comments" v-else>
-                    <div class="empty-icon">💬</div>
-                    <div class="empty-text">快来抢沙发，第一个留言吧～</div>
-                </div>
-
-                <div class="comment-input-area">
+                <div class="input-wrapper">
                     <el-input
                         v-model="newComment"
                         type="textarea"
-                        :rows="2"
-                        :placeholder="replyTarget ? `回复 @${replyTarget.nickname || '用户'}: ` : '说点什么...'"
-                        maxlength="200"
+                        :rows="3"
+                        :placeholder="replyTarget ? `回复 @${replyTarget.nickname || '用户'}...` : '说点什么...'"
+                        maxlength="500"
                         show-word-limit
-                        @keyup.enter.native="submitComment">
+                        resize="none">
                     </el-input>
-                    <div class="comment-actions">
-                        <el-button type="primary" :disabled="!newComment.trim()" @click="submitComment">
+                    <div class="submit-row">
+                        <span class="tip-text">登录后可留言</span>
+                        <el-button 
+                            type="primary" 
+                            :disabled="!newComment.trim()" 
+                            @click="submitComment"
+                            :loading="submitting">
                             发送
                         </el-button>
                     </div>
@@ -253,19 +290,34 @@ export default {
             comments: [],
             newComment: '',
             replyTarget: null,
+            submitting: false,
             goodsTags: [],
             defaultImage: '/static/img/goods.webp',
-            defaultAvatar: '/static/img/logo.png'
+            defaultAvatar: '/static/img/logo.png',
+            touchStartX: 0,
+            touchEndX: 0
         }
     },
-    computed: {},
     created() {
         this.getGoodsById();
+    },
+    mounted() {
+        this.initTouchEvents();
     },
     methods: {
         formatPrice(price) {
             if (price === null || price === undefined) return '0.00';
             return Number(price).toFixed(2);
+        },
+        formatViews(views) {
+            if (!views || views === 0) return '0';
+            if (views >= 10000) {
+                return (views / 10000).toFixed(1) + 'w';
+            }
+            if (views >= 1000) {
+                return (views / 1000).toFixed(1) + 'k';
+            }
+            return views;
         },
         formatDate(date) {
             if (!date) return '';
@@ -278,26 +330,9 @@ export default {
             if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         },
-        getConditionIcon(condition) {
-            const icons = {
-                '全新': '✨',
-                '99新': '💎',
-                '95新': '🌟',
-                '轻微使用': '📦',
-                '成色一般': '🔖'
-            };
-            return icons[condition] || '🏷️';
-        },
-        getTagIcon(tag) {
-            const icons = {
-                '包邮': '📦',
-                '可小刀': '💰',
-                '自提': '🏠',
-                '价格面议': '💬',
-                '支持自提': '📍',
-                '可租可买': '🔄'
-            };
-            return icons[tag] || '🏷️';
+        getReplyUser(userId) {
+            const comment = this.comments.find(c => c.user_id === userId);
+            return comment?.nickname || comment?.username || '用户';
         },
         getTagClass(tag) {
             const classes = {
@@ -324,12 +359,14 @@ export default {
             event.target.src = this.defaultAvatar;
         },
         prevImage() {
-            if (this.images.length === 0) return;
-            this.currentImageIndex = this.currentImageIndex === 0 ? this.images.length - 1 : this.currentImageIndex - 1;
+            if (this.currentImageIndex > 0) {
+                this.currentImageIndex--;
+            }
         },
         nextImage() {
-            if (this.images.length === 0) return;
-            this.currentImageIndex = this.currentImageIndex === this.images.length - 1 ? 0 : this.currentImageIndex + 1;
+            if (this.currentImageIndex < this.images.length - 1) {
+                this.currentImageIndex++;
+            }
         },
         openImagePreview(index) {
             this.previewIndex = index;
@@ -340,24 +377,50 @@ export default {
             this.axios.get('/site/findGoods/' + this.id).then(res => {
                 this.goods = res.data[0] || {};
                 this.images = [];
+                
                 if (this.goods.goods_images && this.goods.goods_images.length > 0) {
-                    this.images = this.goods.goods_images;
+                    if (typeof this.goods.goods_images === 'string') {
+                        try {
+                            this.images = JSON.parse(this.goods.goods_images);
+                        } catch (e) {
+                            this.images = [];
+                        }
+                    } else {
+                        this.images = this.goods.goods_images;
+                    }
                 }
+                
                 if (this.goods.goods_image && !this.images.includes(this.goods.goods_image)) {
                     this.images.unshift(this.goods.goods_image);
                 }
+                
                 if (this.images.length === 0 && this.goods.goods_image) {
                     this.images = [this.goods.goods_image];
                 }
-                if (this.goods.tags && this.goods.tags.length > 0) {
-                    this.goodsTags = this.goods.tags;
+                
+                if (this.images.length === 0) {
+                    this.images = [this.defaultImage];
                 }
+                
+                if (this.goods.tags) {
+                    if (typeof this.goods.tags === 'string') {
+                        try {
+                            this.goodsTags = JSON.parse(this.goods.tags);
+                        } catch (e) {
+                            this.goodsTags = [];
+                        }
+                    } else {
+                        this.goodsTags = this.goods.tags;
+                    }
+                }
+                
                 if (this.goods.user_id) {
                     this.getSellerInfo(this.goods.user_id);
                 }
             }, err => {
                 console.error(err);
             });
+            
             this.axios.get('/site/getImages/' + this.id).then(res => {
                 if (res.data && res.data.length > 0) {
                     const newImages = res.data.map(item => item.image_url);
@@ -370,6 +433,7 @@ export default {
             }, err => {
                 console.error(err);
             });
+            
             this.getComments();
             this.checkFavorite();
         },
@@ -384,6 +448,7 @@ export default {
             this.axios.get('/goods/' + this.id + '/comments').then(res => {
                 this.comments = res.data || [];
             }, err => {
+                console.error('获取留言失败:', err);
                 this.comments = [];
             });
         },
@@ -444,6 +509,12 @@ export default {
                 type: 'info'
             });
         },
+        scrollToComments() {
+            const section = document.getElementById('comments-section');
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        },
         addToCart() {
             if (this.$cookieStore.getCookie('sid')) {
                 let uid = this.$cookieStore.getCookie('sid'),
@@ -502,20 +573,26 @@ export default {
                 }).catch(() => {});
             }
         },
-        replyTo(comment) {
+        replyToComment(comment) {
             this.replyTarget = comment;
             this.newComment = `@${comment.nickname || '用户'} `;
             this.$nextTick(() => {
-                const textarea = document.querySelector('.comment-input-area textarea');
+                const textarea = document.querySelector('.comment-input-box textarea');
                 if (textarea) {
                     textarea.focus();
                     textarea.selectionStart = textarea.value.length;
                     textarea.selectionEnd = textarea.value.length;
                 }
             });
+            this.scrollToComments();
+        },
+        cancelReply() {
+            this.replyTarget = null;
+            this.newComment = '';
         },
         submitComment() {
             if (!this.newComment.trim()) return;
+            
             const uid = this.$cookieStore.getCookie('sid');
             if (!uid) {
                 this.$confirm('您还未登录, 是否去登录?', '提示', {
@@ -526,10 +603,14 @@ export default {
                 }).catch(() => {});
                 return;
             }
+            
+            this.submitting = true;
+            
             this.axios.post(`/goods/${this.id}/comment`, {
                 uid,
                 content: this.newComment,
-                reply_to: this.replyTarget?.user_id
+                reply_to: this.replyTarget?.user_id,
+                parent_comment_id: this.replyTarget?.comment_id
             }).then(res => {
                 if (res.data.success) {
                     this.$message({
@@ -539,12 +620,19 @@ export default {
                     this.newComment = '';
                     this.replyTarget = null;
                     this.getComments();
+                } else {
+                    this.$message({
+                        message: res.data.msg || '留言失败',
+                        type: 'error'
+                    });
                 }
             }, err => {
                 this.$message({
                     message: '留言失败，请稍后重试',
                     type: 'error'
                 });
+            }).finally(() => {
+                this.submitting = false;
             });
         },
         sendChat() {
@@ -554,6 +642,31 @@ export default {
                 type: 'success'
             });
             this.chatMessage = '';
+        },
+        initTouchEvents() {
+            const container = this.$refs.galleryContainer;
+            if (!container) return;
+            
+            container.addEventListener('touchstart', (e) => {
+                this.touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            container.addEventListener('touchend', (e) => {
+                this.touchEndX = e.changedTouches[0].screenX;
+                this.handleSwipe();
+            }, { passive: true });
+        },
+        handleSwipe() {
+            const diff = this.touchStartX - this.touchEndX;
+            const threshold = 50;
+            
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0) {
+                    this.nextImage();
+                } else {
+                    this.prevImage();
+                }
+            }
         }
     }
 }
@@ -563,60 +676,53 @@ export default {
 .goods-detail-page
     background #f5f5f5
     min-height calc(100vh - 60px)
-    padding 20px 0
+    padding-top 16px
+    padding-bottom 80px
 
 .detail-container
     max-width 1200px
     margin 0 auto
     padding 0 16px
 
-.main-content
-    display flex
-    gap 24px
-    background #fff
-    border-radius 16px
-    padding 24px
-    box-shadow 0 2px 12px rgba(0, 0, 0, 0.05)
-    margin-bottom 24px
-
 .gallery-section
-    flex 0 0 520px
+    margin-bottom 16px
+
+.gallery-wrapper
+    background #fff
+    border-radius 12px
+    overflow hidden
+    box-shadow 0 2px 12px rgba(0, 0, 0, 0.05)
 
 .gallery-main
     position relative
-    width 520px
-    height 520px
-    border-radius 12px
+    width 100%
+    height 0
+    padding-bottom 100%
     overflow hidden
     background #fafafa
 
-.gallery-image-wrapper
+.gallery-container
+    position absolute
+    top 0
+    left 0
     width 100%
     height 100%
-    cursor pointer
-    position relative
+    display flex
+    transition transform 0.3s ease-in-out
 
-    img
-        width 100%
-        height 100%
-        object-fit contain
-        transition transform 0.3s
-
-    &:hover img
-        transform scale(1.02)
-
-.gallery-placeholder
+.gallery-item
+    flex-shrink 0
     width 100%
     height 100%
     display flex
     align-items center
     justify-content center
+    transition transform 0.3s ease-in-out
 
     img
-        width 80%
-        height 80%
+        max-width 100%
+        max-height 100%
         object-fit contain
-        opacity 0.8
 
 .gallery-nav
     position absolute
@@ -626,25 +732,30 @@ export default {
     transform translateY(-50%)
     display flex
     justify-content space-between
-    padding 0 12px
+    padding 0 16px
     pointer-events none
+    z-index 10
 
 .nav-btn
-    width 40px
-    height 40px
+    width 36px
+    height 36px
     border-radius 50%
-    background rgba(0, 0, 0, 0.3)
+    background rgba(0, 0, 0, 0.4)
     display flex
     align-items center
     justify-content center
     cursor pointer
     color #fff
-    font-size 18px
+    font-size 16px
     transition all 0.3s
     pointer-events auto
 
     &:hover
-        background rgba(0, 0, 0, 0.5)
+        background rgba(0, 0, 0, 0.6)
+
+    &.disabled
+        opacity 0.3
+        cursor not-allowed
 
 .gallery-counter
     position absolute
@@ -655,26 +766,62 @@ export default {
     padding 4px 12px
     border-radius 12px
     font-size 13px
+    z-index 10
+
+    .current
+        font-weight bold
+
+    .separator
+        margin 0 4px
+
+    .total
+        opacity 0.8
+
+.gallery-dots
+    position absolute
+    bottom 60px
+    left 50%
+    transform translateX(-50%)
+    display flex
+    gap 8px
+    z-index 10
+
+.dot
+    width 8px
+    height 8px
+    border-radius 50%
+    background rgba(255, 255, 255, 0.5)
+    cursor pointer
+    transition all 0.3s
+
+    &:hover
+        background rgba(255, 255, 255, 0.8)
+
+    &.active
+        width 20px
+        border-radius 4px
+        background #fff
 
 .gallery-thumbs
     display flex
-    gap 12px
-    margin-top 16px
+    gap 8px
+    padding 12px
     overflow-x auto
-    padding 4px 0
+    background #fff
+    border-top 1px solid #f0f0f0
 
 .thumb-item
-    width 80px
-    height 80px
+    width 60px
+    height 60px
     border-radius 8px
     overflow hidden
-    border 3px solid transparent
+    border 2px solid transparent
     cursor pointer
     transition all 0.3s
     flex-shrink 0
 
     &:hover
-        border-color #409EFF
+        border-color #e0e0e0
 
     &.active
         border-color #ff6b35
@@ -685,10 +832,41 @@ export default {
         height 100%
         object-fit cover
 
-.info-section
-    flex 1
+.gallery-placeholder
+    width 100%
+    height 0
+    padding-bottom 100%
+    background #fafafa
+    border-radius 12px
     display flex
     flex-direction column
+    align-items center
+    justify-content center
+    position relative
+
+    img
+        position absolute
+        top 50%
+        left 50%
+        transform translate(-50%, -50%)
+        width 60%
+        height auto
+        opacity 0.6
+
+    .placeholder-text
+        position absolute
+        bottom 20%
+        left 50%
+        transform translateX(-50%)
+        font-size 14px
+        color #999
+
+.info-section
+    background #fff
+    border-radius 12px
+    padding 20px
+    margin-bottom 16px
+    box-shadow 0 2px 12px rgba(0, 0, 0, 0.05)
 
 .price-area
     display flex
@@ -696,30 +874,28 @@ export default {
     align-items flex-start
     margin-bottom 16px
 
-.price-main
-    display flex
-    flex-direction column
+.price-left
+    .price-row
+        display flex
+        align-items baseline
+        gap 8px
 
 .price-symbol
-    font-size 20px
+    font-size 18px
     color #ff6b35
     font-weight bold
 
 .price-value
-    font-size 36px
+    font-size 32px
     color #ff6b35
     font-weight bold
-    margin-left 4px
+    line-height 1
 
 .original-price
     display flex
     align-items center
-    margin-top 4px
     gap 8px
-
-.original-label
-    font-size 12px
-    color #999
+    margin-left 8px
 
 .original-value
     font-size 14px
@@ -737,25 +913,21 @@ export default {
 .condition-badge
     display flex
     align-items center
-    gap 6px
     padding 6px 14px
-    background linear-gradient(135deg, #f0f9ff, #e0f2fe)
-    border-radius 20px
-    border 1px solid #bae6fd
-
-.condition-icon
-    font-size 16px
+    background linear-gradient(135deg, #fff5f2, #fff0ed)
+    border-radius 16px
+    border 1px solid #ffd7cc
 
 .condition-text
-    font-size 14px
-    color #0369a1
+    font-size 13px
+    color #ff6b35
     font-weight 600
 
 .title-area
-    margin-bottom 20px
+    margin-bottom 16px
 
 .goods-title
-    font-size 20px
+    font-size 18px
     font-weight 600
     color #333
     line-height 1.5
@@ -767,12 +939,11 @@ export default {
     gap 8px
 
 .tag-item
-    display flex
+    display inline-flex
     align-items center
-    gap 4px
     padding 4px 12px
     border-radius 16px
-    font-size 13px
+    font-size 12px
     color #666
     background #f5f5f5
     border 1px solid #e8e8e8
@@ -807,16 +978,13 @@ export default {
         color #7c3aed
         border-color #ddd6fe
 
-.tag-icon
-    font-size 14px
-
-.stats-area
+.stats-row
     display flex
-    gap 24px
-    margin-bottom 20px
+    gap 20px
     padding 12px 0
     border-top 1px dashed #f0f0f0
     border-bottom 1px dashed #f0f0f0
+    margin-bottom 16px
 
 .stat-item
     display flex
@@ -828,41 +996,42 @@ export default {
     i
         font-size 14px
 
-.seller-area
+.seller-card
+    display flex
+    align-items center
     background #fafafa
     border-radius 12px
     padding 16px
-    margin-bottom 20px
-
-.seller-info
-    display flex
-    align-items center
+    margin-bottom 16px
     cursor pointer
     transition all 0.3s
 
     &:hover
-        .seller-arrow
+        background #f5f5f5
+
+        .arrow-icon
             transform translateX(4px)
 
 .seller-avatar
-    width 56px
-    height 56px
+    width 48px
+    height 48px
     border-radius 50%
     overflow hidden
-    border 3px solid #fff
+    border 2px solid #fff
     box-shadow 0 2px 8px rgba(0, 0, 0, 0.1)
+    flex-shrink 0
 
     img
         width 100%
         height 100%
         object-fit cover
 
-.seller-detail
+.seller-info-box
     flex 1
     margin-left 12px
 
 .seller-name
-    font-size 16px
+    font-size 15px
     font-weight 600
     color #333
     margin-bottom 4px
@@ -871,45 +1040,22 @@ export default {
     gap 8px
 
 .seller-stats
-    font-size 13px
+    font-size 12px
     color #999
     display flex
     align-items center
     gap 8px
 
-.stat-divider
-    color #ddd
+    .divider
+        color #ddd
 
-.seller-arrow
+.arrow-icon
     color #ccc
-    font-size 16px
+    font-size 18px
     transition all 0.3s
 
-.seller-actions
-    display flex
-    gap 12px
-    margin-top 12px
-    padding-top 12px
-    border-top 1px solid #f0f0f0
-
-.contact-btn
-    flex 1
-    border-radius 20px
-    background #fff
-    color #ff6b35
-    border-color #ff6b35
-
-    &:hover
-        background #fff5f2
-        color #ff6b35
-        border-color #ff6b35
-
-.follow-btn
-    flex 1
-    border-radius 20px
-
-.desc-area
-    margin-bottom 20px
+.desc-section
+    margin-bottom 16px
 
 .section-header
     display flex
@@ -917,17 +1063,17 @@ export default {
     margin-bottom 12px
 
 .section-title
-    font-size 16px
+    font-size 15px
     font-weight 600
     color #333
 
 .comment-count
-    font-size 13px
+    font-size 12px
     color #999
     margin-left 8px
 
 .desc-content
-    font-size 15px
+    font-size 14px
     color #666
     line-height 1.8
 
@@ -935,18 +1081,21 @@ export default {
         margin 0
 
 .action-bar
-    position sticky
+    position fixed
     bottom 0
-    margin-top auto
-    padding 16px 0 0
+    left 0
+    right 0
+    background #fff
+    padding 12px 16px
     display flex
     justify-content space-between
     align-items center
     border-top 1px solid #f0f0f0
+    z-index 100
 
 .action-left
     display flex
-    gap 24px
+    gap 20px
 
 .action-btn
     display flex
@@ -955,26 +1104,39 @@ export default {
     cursor pointer
     transition all 0.3s
     color #666
+    position relative
 
     &:hover
-        color #409EFF
+        color #ff6b35
 
     &.active
         color #ff6b35
 
     i
-        font-size 22px
-        margin-bottom 4px
+        font-size 20px
+        margin-bottom 2px
 
     span
-        font-size 12px
+        font-size 11px
+
+.comment-badge
+    position absolute
+    top -4px
+    right -8px
+    background #ff6b35
+    color #fff
+    font-size 10px
+    padding 0 4px
+    border-radius 8px
+    min-width 16px
+    text-align center
 
 .action-right
     display flex
     gap 12px
 
 .cart-btn
-    padding 12px 32px
+    padding 12px 28px
     border-radius 24px
     background #fff
     color #ff6b35
@@ -987,7 +1149,7 @@ export default {
         border-color #ff6b35
 
 .buy-btn
-    padding 12px 32px
+    padding 12px 28px
     border-radius 24px
     background linear-gradient(135deg, #ff6b35, #ff4d4f)
     border none
@@ -998,8 +1160,9 @@ export default {
 
 .comments-section
     background #fff
-    border-radius 16px
-    padding 24px
+    border-radius 12px
+    padding 20px
+    margin-bottom 80px
     box-shadow 0 2px 12px rgba(0, 0, 0, 0.05)
 
 .comment-list
@@ -1015,8 +1178,8 @@ export default {
         border-bottom none
 
 .comment-avatar
-    width 40px
-    height 40px
+    width 36px
+    height 36px
     border-radius 50%
     overflow hidden
     flex-shrink 0
@@ -1039,7 +1202,7 @@ export default {
     display flex
     align-items center
     gap 8px
-    font-size 14px
+    font-size 13px
     font-weight 600
     color #333
 
@@ -1053,42 +1216,74 @@ export default {
     line-height 1.6
     margin-bottom 8px
 
-.comment-reply
-    font-size 12px
+.reply-prefix
     color #409EFF
-    cursor pointer
-    display inline-flex
-    align-items center
-    gap 4px
+    font-size 13px
 
-    &:hover
-        color #66b1ff
+.comment-actions
+    .action-link
+        display inline-flex
+        align-items center
+        gap 4px
+        font-size 12px
+        color #409EFF
+        cursor pointer
+
+        &:hover
+            color #66b1ff
 
 .empty-comments
     text-align center
     padding 40px 0
 
 .empty-icon
-    font-size 48px
+    font-size 40px
     margin-bottom 12px
 
 .empty-text
     font-size 14px
     color #999
 
-.comment-input-area
+.comment-input-box
     background #fafafa
     border-radius 12px
     padding 16px
 
-.comment-actions
+.reply-indicator
     display flex
-    justify-content flex-end
+    justify-content space-between
+    align-items center
+    margin-bottom 12px
+    padding 8px 12px
+    background #e6f7ff
+    border-radius 8px
+
+.reply-text
+    font-size 13px
+    color #1890ff
+
+.close-btn
+    cursor pointer
+    color #999
+    font-size 16px
+
+    &:hover
+        color #666
+
+.input-wrapper
+    .el-textarea__inner
+        border-radius 8px
+        resize none
+
+.submit-row
+    display flex
+    justify-content space-between
+    align-items center
     margin-top 12px
 
-    .el-button
-        border-radius 20px
-        padding 8px 24px
+.tip-text
+    font-size 12px
+    color #999
 
 .image-preview-container
     display flex
@@ -1123,51 +1318,42 @@ export default {
     .el-button
         border-radius 0 20px 20px 0
 
-@media (max-width 1200px)
-    .main-content
-        flex-direction column
-
-    .gallery-section
-        flex none
-        width 100%
-
-    .gallery-main
-        width 100%
-        height auto
-        aspect-ratio 1
-
-        img
-            width 100%
-            height auto
-
 @media (max-width 768px)
     .detail-container
-        padding 0 8px
-
-    .main-content
-        padding 16px
-        gap 16px
+        padding 0
 
     .gallery-main
-        width 100%
-        height 300px
+        border-radius 0
+
+    .info-section
+        border-radius 0
+        margin-bottom 0
+
+    .comments-section
+        border-radius 0
+        margin-bottom 60px
+
+    .action-bar
+        padding 10px 16px
+
+    .action-left
+        gap 16px
+
+    .action-right
+        gap 8px
+
+    .cart-btn, .buy-btn
+        padding 10px 20px
+        font-size 14px
+
+    .price-value
+        font-size 28px
+
+    .goods-title
+        font-size 16px
 
     .gallery-thumbs
         .thumb-item
-            width 60px
-            height 60px
-
-    .price-main
-        .price-value
-            font-size 28px
-
-    .action-bar
-        flex-direction column
-        gap 12px
-
-    .action-right
-        width 100%
-
-        .el-button
-            flex 1
+            width 48px
+            height 48px
 </style>

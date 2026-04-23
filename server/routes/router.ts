@@ -7,6 +7,7 @@ const AddressController = require('../controller/AddressController.ts');
 const FeedbackController = require('../controller/FeedbackController.ts');
 const OrderController = require('../controller/OrderController.ts');
 const ImageController = require('../controller/ImageController.ts');
+const CommentController = require('../controller/CommentController.ts');
 
 module.exports = (app) => {
     router.get('/site/conditions', GoodsController.getConditions);
@@ -47,40 +48,10 @@ module.exports = (app) => {
     router.post('/site/uploadImages', ImageController.uploadImages);
     router.get('/site/getImages/:gid', ImageController.getImages);
     
-    // 测试端点
-    router.post('/test/publish', async (ctx) => {
-        try {
-            const body = ctx.request.body;
-            console.log('=== 测试发布数据 ===');
-            console.log('商品名称:', body.name);
-            console.log('商品价格:', body.price);
-            console.log('商品图片长度:', body.imageUrl ? body.imageUrl.length : '无');
-            console.log('商品图片类型:', body.imageUrl ? body.imageUrl.substring(0, 50) : '无');
-            console.log('多图数量:', body.goods_images ? body.goods_images.length : 0);
-            console.log('成色:', body.condition);
-            console.log('标签:', body.tags);
-            
-            if (body.imageUrl && body.imageUrl.length > 10000) {
-                console.log('⚠️  图片URL过长:', body.imageUrl.length, '字符');
-            }
-            
-            ctx.body = {
-                success: true,
-                message: '测试成功',
-                data: {
-                    imageUrlLength: body.imageUrl ? body.imageUrl.length : 0,
-                    goodsImagesCount: body.goods_images ? body.goods_images.length : 0
-                }
-            };
-            
-        } catch (e) {
-            console.error('测试错误:', e);
-            ctx.body = {
-                success: false,
-                message: e.message
-            };
-        }
-    });
+    router.get('/goods/:id/comments', CommentController.getComments);
+    router.post('/goods/:id/comment', CommentController.addComment);
+    router.delete('/comments/:comment_id', CommentController.deleteComment);
+    router.get('/goods/:id/comments/count', CommentController.getCommentsCount);
     
     app.use(router.routes()).use(router.allowedMethods());
 };

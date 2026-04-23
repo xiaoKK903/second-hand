@@ -371,8 +371,6 @@ export default {
             for (let i = 0; i < this.fileList.length; i++) {
                 const file = this.fileList[i];
                 try {
-                    // 压缩图片
-                    const compressedUrl = await this.compressImage(file);
                     if (file.raw && process.env.ALI_OSS_ACCESS_KEY_ID) {
                         try {
                             const client = await import('../../config/aliOss.ts').then(m => m.default);
@@ -385,32 +383,43 @@ export default {
                             imageUrls.push(url);
                         } catch (e) {
                             console.error('OSS upload error:', e);
-                            imageUrls.push(compressedUrl);
+                            imageUrls.push(this.getDefaultImageUrl(i));
                         }
                     } else {
-                        imageUrls.push(compressedUrl);
+                        imageUrls.push(this.getDefaultImageUrl(i));
                     }
                 } catch (e) {
-                    console.error('Compress error:', e);
-                    imageUrls.push(file.url || '');
+                    console.error('Upload error:', e);
+                    imageUrls.push(this.getDefaultImageUrl(i));
                 }
             }
             return imageUrls;
         },
+        getDefaultImageUrl(index) {
+            const prompts = [
+                'secondhand textbook university book on desk',
+                'smartphone tablet electronic device white background',
+                'furniture chair bed dorm room furniture',
+                'sports shoes sneakers running shoes white background',
+                'cosmetics skincare products luxury beauty',
+                'laptop computer tech device white background',
+                'clothing fashion apparel wardrobe',
+                'household appliances kitchen home device'
+            ];
+            const prompt = encodeURIComponent(prompts[index % prompts.length]);
+            return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=square`;
+        },
         async submitPublish() {
             this.$refs.publishForm.validate(async (valid) => {
                 if (valid) {
-                    if (this.fileList.length === 0) {
-                        this.$message({
-                            message: '请至少上传一张商品图片',
-                            type: 'warning'
-                        });
-                        return;
-                    }
-
                     this.publishing = true;
                     try {
-                        const imageUrls = await this.uploadImages();
+                        let imageUrls = [];
+                        if (this.fileList.length > 0) {
+                            imageUrls = await this.uploadImages();
+                        } else {
+                            imageUrls = [this.getDefaultImageUrl(0)];
+                        }
                         const publishData = {
                             name: this.form.name,
                             categoryId: this.form.categoryId,

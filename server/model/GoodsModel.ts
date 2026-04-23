@@ -29,9 +29,10 @@ const Goods = db.sequelize.define('goods', {
         field: 'goods_desc'
     },
     goods_image: {
-        type: db.DataTypes.STRING,
+        type: db.DataTypes.TEXT,
         allowNull: true,
-        field: 'goods_image'
+        field: 'goods_image',
+        comment: '商品封面图'
     },
     goods_images: {
         type: db.DataTypes.TEXT,
