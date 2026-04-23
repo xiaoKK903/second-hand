@@ -20,6 +20,7 @@ const DataTypes = Sequelize.DataTypes;
 
 module.exports = {
     sequelize,
+    Sequelize,
     Op,
     DataTypes
 };

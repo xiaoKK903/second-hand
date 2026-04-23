@@ -10,7 +10,7 @@
                 <div 
                     class="upload-item"
                     v-for="(file, index) in fileList"
-                    :key="index">
+                    :key="file.uid || index">
                     <div class="image-wrapper">
                         <img :src="file.url || file.thumbUrl" @click="previewImage(index)">
                         <div class="image-mask" @click.stop>
@@ -28,9 +28,8 @@
                     list-type="picture-card"
                     :auto-upload="false"
                     :limit="9 - fileList.length"
-                    :file-list="uploadFileList"
                     :on-change="handleImageChange"
-                    :on-remove="handleImageRemove"
+                    :on-exceed="handleExceed"
                     accept="image/*">
                     <div class="upload-add">
                         <i class="el-icon-plus"></i>
@@ -274,10 +273,17 @@ export default {
         },
         handleImageChange(file, fileList) {
             const rawFile = file.raw;
-            if (rawFile) {
+            if (rawFile && file.status === 'ready') {
+                const isDuplicate = this.fileList.some(item => 
+                    item.name === file.name && item.raw && item.raw.size === rawFile.size
+                );
+                if (isDuplicate) {
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.fileList.push({
+                        uid: file.uid || Date.now() + Math.random(),
                         name: file.name,
                         url: e.target.result,
                         raw: rawFile
@@ -286,7 +292,8 @@ export default {
                 reader.readAsDataURL(rawFile);
             }
         },
-        handleImageRemove(file, fileList) {
+        handleExceed(files, fileList) {
+            this.$message.warning(`最多只能上传9张图片，当前已选择${this.fileList.length}张`);
         },
         removeImage(index) {
             this.fileList.splice(index, 1);
