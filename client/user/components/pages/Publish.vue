@@ -271,26 +271,34 @@ export default {
                 console.error(err);
             });
         },
+        getFileUniqueId(file) {
+            if (!file.raw) return null;
+            return `${file.raw.name}-${file.raw.size}-${file.raw.lastModified || 0}`;
+        },
         handleImageChange(file, fileList) {
-            const rawFile = file.raw;
-            if (rawFile && file.status === 'ready') {
-                const isDuplicate = this.fileList.some(item => 
-                    item.name === file.name && item.raw && item.raw.size === rawFile.size
+            if (!file.raw) return;
+            
+            const fileId = this.getFileUniqueId(file);
+            const existingIndex = this.fileList.findIndex(item => 
+                this.getFileUniqueId(item) === fileId
+            );
+            if (existingIndex !== -1) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const finalIndex = this.fileList.findIndex(item => 
+                    this.getFileUniqueId(item) === fileId
                 );
-                if (isDuplicate) {
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
+                if (finalIndex === -1) {
                     this.fileList.push({
                         uid: file.uid || Date.now() + Math.random(),
                         name: file.name,
                         url: e.target.result,
-                        raw: rawFile
+                        raw: file.raw
                     });
-                };
-                reader.readAsDataURL(rawFile);
-            }
+                }
+            };
+            reader.readAsDataURL(file.raw);
         },
         handleExceed(files, fileList) {
             this.$message.warning(`最多只能上传9张图片，当前已选择${this.fileList.length}张`);
