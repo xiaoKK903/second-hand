@@ -396,18 +396,11 @@ export default {
             return imageUrls;
         },
         getDefaultImageUrl(index) {
-            const prompts = [
-                'secondhand textbook university book on desk',
-                'smartphone tablet electronic device white background',
-                'furniture chair bed dorm room furniture',
-                'sports shoes sneakers running shoes white background',
-                'cosmetics skincare products luxury beauty',
-                'laptop computer tech device white background',
-                'clothing fashion apparel wardrobe',
-                'household appliances kitchen home device'
+            var images = [
+                '/static/img/goods.webp',
+                '/static/img/timg.jpg'
             ];
-            const prompt = encodeURIComponent(prompts[index % prompts.length]);
-            return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=square`;
+            return images[index % images.length];
         },
         async submitPublish() {
             this.$refs.publishForm.validate(async (valid) => {

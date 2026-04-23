@@ -294,6 +294,7 @@ export default {
             goodsTags: [],
             defaultImage: '/static/img/goods.webp',
             defaultAvatar: '/static/img/logo.png',
+            placeholderAvatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIGZpbGw9IiNlNWU3ZWIiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjI0IiByPSIxMiIgZmlsbD0iIzk5YTFhZiIvPjxyZWN0IHg9IjEyIiB5PSI0MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjE4IiByeD0iOSIgZmlsbD0iIzk5YTFhZiIvPjwvc3ZnPg==',
             touchStartX: 0,
             touchEndX: 0
         }
@@ -359,7 +360,10 @@ export default {
             event.target.src = this.defaultImage;
         },
         handleAvatarError(event) {
-            event.target.src = this.defaultAvatar;
+            var target = event.target;
+            if (target.dataset.errored) return;
+            target.dataset.errored = '1';
+            target.src = this.placeholderAvatar;
         },
         prevImage() {
             if (this.currentImageIndex > 0) {
