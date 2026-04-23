@@ -7,6 +7,7 @@ const AddressController = require('../controller/AddressController.ts');
 const FeedbackController = require('../controller/FeedbackController.ts');
 const OrderController = require('../controller/OrderController.ts');
 const ImageController = require('../controller/ImageController.ts');
+const CommentController = require('../controller/CommentController.ts');
 
 module.exports = (app) => {
     router.get('/site/conditions', GoodsController.getConditions);
@@ -46,5 +47,11 @@ module.exports = (app) => {
     router.post('/site/receipt', OrderController.confirmReceipt);
     router.post('/site/uploadImages', ImageController.uploadImages);
     router.get('/site/getImages/:gid', ImageController.getImages);
+    
+    router.get('/goods/:id/comments', CommentController.getComments);
+    router.post('/goods/:id/comment', CommentController.addComment);
+    router.delete('/comments/:comment_id', CommentController.deleteComment);
+    router.get('/goods/:id/comments/count', CommentController.getCommentsCount);
+    
     app.use(router.routes()).use(router.allowedMethods());
 };

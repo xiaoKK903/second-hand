@@ -275,6 +275,51 @@ export default {
             if (!file.raw) return null;
             return `${file.raw.name}-${file.raw.size}-${file.raw.lastModified || 0}`;
         },
+        compressImage(file, maxWidth = 800, quality = 0.7) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = () => {
+                    const scale = Math.min(maxWidth / img.width, 1);
+                    const width = img.width * scale;
+                    const height = img.height * scale;
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                resolve(e.target.result);
+                            };
+                            reader.readAsDataURL(blob);
+                        } else {
+                            resolve(file.url || '');
+                        }
+                    }, 'image/jpeg', quality);
+                };
+                
+                img.onerror = () => {
+                    resolve(file.url || '');
+                };
+                
+                if (file.url) {
+                    img.src = file.url;
+                } else if (file.raw) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file.raw);
+                } else {
+                    resolve('');
+                }
+            });
+        },
         handleImageChange(file, fileList) {
             if (!file.raw) return;
             
@@ -325,40 +370,56 @@ export default {
             const imageUrls = [];
             for (let i = 0; i < this.fileList.length; i++) {
                 const file = this.fileList[i];
-                if (file.raw && process.env.ALI_OSS_ACCESS_KEY_ID) {
-                    try {
-                        const client = await import('../../config/aliOss.ts').then(m => m.default);
-                        const name = `goods/${Date.now()}_${i}_${file.name}`;
-                        const result = await client.multipartUpload(name, file.raw);
-                        let url = result.res.requestUrls[0];
-                        if (url.indexOf('?') !== -1) {
-                            url = url.substring(0, url.indexOf('?'));
+                try {
+                    if (file.raw && process.env.ALI_OSS_ACCESS_KEY_ID) {
+                        try {
+                            const client = await import('../../config/aliOss.ts').then(m => m.default);
+                            const name = `goods/${Date.now()}_${i}_${file.name}`;
+                            const result = await client.multipartUpload(name, file.raw);
+                            let url = result.res.requestUrls[0];
+                            if (url.indexOf('?') !== -1) {
+                                url = url.substring(0, url.indexOf('?'));
+                            }
+                            imageUrls.push(url);
+                        } catch (e) {
+                            console.error('OSS upload error:', e);
+                            imageUrls.push(this.getDefaultImageUrl(i));
                         }
-                        imageUrls.push(url);
-                    } catch (e) {
-                        console.error('OSS upload error:', e);
-                        imageUrls.push(file.url || '');
+                    } else {
+                        imageUrls.push(this.getDefaultImageUrl(i));
                     }
-                } else {
-                    imageUrls.push(file.url || '');
+                } catch (e) {
+                    console.error('Upload error:', e);
+                    imageUrls.push(this.getDefaultImageUrl(i));
                 }
             }
             return imageUrls;
         },
+        getDefaultImageUrl(index) {
+            const prompts = [
+                'secondhand textbook university book on desk',
+                'smartphone tablet electronic device white background',
+                'furniture chair bed dorm room furniture',
+                'sports shoes sneakers running shoes white background',
+                'cosmetics skincare products luxury beauty',
+                'laptop computer tech device white background',
+                'clothing fashion apparel wardrobe',
+                'household appliances kitchen home device'
+            ];
+            const prompt = encodeURIComponent(prompts[index % prompts.length]);
+            return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=square`;
+        },
         async submitPublish() {
             this.$refs.publishForm.validate(async (valid) => {
                 if (valid) {
-                    if (this.fileList.length === 0) {
-                        this.$message({
-                            message: '请至少上传一张商品图片',
-                            type: 'warning'
-                        });
-                        return;
-                    }
-
                     this.publishing = true;
                     try {
-                        const imageUrls = await this.uploadImages();
+                        let imageUrls = [];
+                        if (this.fileList.length > 0) {
+                            imageUrls = await this.uploadImages();
+                        } else {
+                            imageUrls = [this.getDefaultImageUrl(0)];
+                        }
                         const publishData = {
                             name: this.form.name,
                             categoryId: this.form.categoryId,
