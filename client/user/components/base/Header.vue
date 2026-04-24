@@ -74,55 +74,70 @@ export default {
 </script>
 
 <style lang="stylus">
-    #header
-        height 80px;
-        background-color #fff;
-        border-bottom 1px solid black;
-        .header-content
-            width 1080px;
-            margin 0 auto;
-            display flex;
-            align-self center;
-            .img-wrapper
-                flex 10;
-                >img
-                    height 80px;
-            .link-wrapper
-                flex 6;
-                display flex;
-                align-items center;
-                .active
-                    color blue;
-                a
-                    font-size 16px;
-                    line-height 80px;
-                    padding 0 20px;
-                    text-decoration none;
-                    color #b2bac2;
-                a:hover
-                    color #007fff;
-                .nav-item
-                    position relative;
-                    display flex;
-                    align-items center;
-                    gap 4px;
-                    padding 0 20px;
-                    height 80px;
-                    cursor pointer;
-                    transition color 0.3s;
-                    color #b2bac2;
+#header
+    height 80px
+    background-color #fff
+    border-bottom 1px solid black
 
-                    &:hover
-                        color #007fff;
+    .header-content
+        width 1080px
+        margin 0 auto
+        display flex
+        align-items center
+        height 80px
 
-                    i
-                        font-size 18px;
+        .img-wrapper
+            flex 10
+            display flex
+            align-items center
 
-                    .nav-text
-                        font-size 16px;
+            img
+                height 80px
 
-                    .chat-badge
-                        position absolute;
-                        top 16px;
-                        right 8px;
+        .link-wrapper
+            flex 6
+            display flex
+            align-items center
+            justify-content flex-end
+            height 80px
+
+            .active
+                color #007fff
+
+            a
+                font-size 16px
+                line-height 80px
+                padding 0 15px
+                text-decoration none
+                color #b2bac2
+                white-space nowrap
+
+            a:hover
+                color #007fff
+
+            .nav-item
+                position relative
+                display flex
+                align-items center
+                gap 4px
+                padding 0 15px
+                height 80px
+                cursor pointer
+                transition color 0.3s
+                color #b2bac2
+                white-space nowrap
+
+                &:hover
+                    color #007fff
+
+                i
+                    font-size 18px
+
+                .nav-text
+                    font-size 16px
+
+                .chat-badge
+                    position absolute
+                    top 15px
+                    right 5px
 </style>
