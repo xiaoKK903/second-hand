@@ -47,6 +47,13 @@
                 </div>
                 <div class="goods-actions">
                     <el-button 
+                        type="primary" 
+                        size="small"
+                        @click="editGoods(goods)">
+                        <i class="el-icon-edit"></i>
+                        编辑
+                    </el-button>
+                    <el-button 
                         v-if="goods.status === 'active'"
                         type="warning" 
                         size="small"
@@ -204,6 +211,9 @@ export default {
         },
         goToDetail: function(goods) {
             this.$router.push({ path: '/site/goodsDetail', query: { id: goods.goods_id } });
+        },
+        editGoods: function(goods) {
+            this.$router.push({ name: 'publish', query: { id: goods.goods_id } });
         },
         goToPublish: function() {
             this.$router.push({ name: 'publish' });
