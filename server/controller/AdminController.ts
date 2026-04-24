@@ -128,6 +128,12 @@ module.exports = {
                 return;
             }
             
+            if (uid == targetUserId) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '不能操作自己的账号' };
+                return;
+            }
+            
             var isAdmin = await AdminService.checkAdmin(uid);
             if (!isAdmin) {
                 ctx.response.type = 'application/json';
@@ -165,6 +171,12 @@ module.exports = {
             if (!targetUserId) {
                 ctx.response.type = 'application/json';
                 ctx.response.body = { success: false, msg: '缺少目标用户ID' };
+                return;
+            }
+            
+            if (uid == targetUserId) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '不能操作自己的账号' };
                 return;
             }
             

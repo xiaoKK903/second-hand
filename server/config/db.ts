@@ -1,5 +1,5 @@
-const Sequelize = require('sequelize');
-const sequelize = new Sequelize(
+var Sequelize = require('sequelize');
+var sequelize = new Sequelize(
     process.env.DB_NAME || 'trading_system',
     process.env.DB_USER || 'root',
     process.env.DB_PASSWORD || '',
@@ -15,8 +15,8 @@ sequelize.authenticate().then(() => {
     console.error('connect failed:' + err);
 });
 
-const Op = Sequelize.Op;
-const DataTypes = Sequelize.DataTypes;
+var Op = Sequelize.Op;
+var DataTypes = Sequelize.DataTypes;
 
 module.exports = {
     sequelize,

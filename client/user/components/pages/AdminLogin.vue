@@ -51,6 +51,9 @@
 <script lang="typescript">
 export default {
     name: 'AdminLogin',
+    created: function() {
+        this.$cookieStore.delCookie('admin_uid');
+    },
     data: function() {
         var validatePhone = function(rule, value, callback) {
             if (!value) {
