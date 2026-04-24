@@ -45,7 +45,8 @@ module.exports = {
                         nickname: nickname,
                         avatar: user.avatar,
                         bio: user.bio,
-                        contact: user.contact
+                        contact: user.contact,
+                        role: user.role || 'user'
                     }
                 };
             } else {
