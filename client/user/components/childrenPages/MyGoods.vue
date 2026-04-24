@@ -98,111 +98,117 @@ export default {
         this.getMyGoods();
     },
     methods: {
-        formatPrice(price) {
+        formatPrice: function(price) {
             if (price === null || price === undefined) return '0';
-            const num = Number(price);
+            var num = Number(price);
             if (num === Math.floor(num)) {
                 return num.toString();
             }
             return num.toFixed(2);
         },
-        formatDate(date) {
+        formatDate: function(date) {
             if (!date) return '';
-            const d = new Date(date);
-            const now = new Date();
-            const diff = now - d;
+            var d = new Date(date);
+            var now = new Date();
+            var diff = now - d;
             if (diff < 60000) return '刚刚';
-            if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
-            if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
-            if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            var year = d.getFullYear();
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
         },
-        getStatusText(status) {
-            const statusMap = {
+        getStatusText: function(status) {
+            var statusMap = {
                 'active': '出售中',
                 'inactive': '已下架',
                 'sold': '已售出'
             };
             return statusMap[status] || status;
         },
-        handleTabClick(tab) {
+        handleTabClick: function(tab) {
             this.activeTab = tab.name;
             this.getMyGoods();
         },
-        getMyGoods() {
-            const uid = this.$cookieStore.getCookie('sid');
+        getMyGoods: function() {
+            var uid = this.$cookieStore.getCookie('sid');
             if (!uid) {
                 this.$router.push({ name: 'login' });
                 return;
             }
-            const params = { uid };
+            var params = { uid: uid };
             if (this.activeTab !== 'all') {
                 params.status = this.activeTab;
             }
-            this.axios.get('/site/goods/my', { params }).then(res => {
+            var that = this;
+            this.axios.get('/site/goods/my', { params: params }).then(function(res) {
                 if (res.data && res.data.data) {
-                    this.goodsList = res.data.data;
+                    that.goodsList = res.data.data;
                 }
-            }, err => {
+            }, function(err) {
                 console.error(err);
-                this.$message.error('获取商品列表失败');
+                that.$message.error('获取商品列表失败');
             });
         },
-        toggleStatus(goods, status) {
-            const uid = this.$cookieStore.getCookie('sid');
+        toggleStatus: function(goods, status) {
+            var uid = this.$cookieStore.getCookie('sid');
             if (!uid) return;
-            const action = status === 'active' ? '上架' : '下架';
-            this.$confirm(`确定要${action}这件商品吗？`, '提示', {
+            var action = status === 'active' ? '上架' : '下架';
+            var that = this;
+            this.$confirm('确定要' + action + '这件商品吗？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            }).then(() => {
-                this.axios.post(`/site/goods/${goods.goods_id}/status`, {
-                    uid,
-                    status
-                }).then(res => {
+            }).then(function() {
+                that.axios.post('/site/goods/' + goods.goods_id + '/status', {
+                    uid: uid,
+                    status: status
+                }).then(function(res) {
                     if (res.data.success) {
-                        this.$message.success(`商品${action}成功`);
-                        this.getMyGoods();
+                        that.$message.success('商品' + action + '成功');
+                        that.getMyGoods();
                     } else {
-                        this.$message.error(res.data.msg || `商品${action}失败`);
+                        that.$message.error(res.data.msg || '商品' + action + '失败');
                     }
-                }, err => {
+                }, function(err) {
                     console.error(err);
-                    this.$message.error(`商品${action}失败`);
+                    that.$message.error('商品' + action + '失败');
                 });
-            }).catch(() => {});
+            }).catch(function() {});
         },
-        deleteGoods(goods) {
-            const uid = this.$cookieStore.getCookie('sid');
+        deleteGoods: function(goods) {
+            var uid = this.$cookieStore.getCookie('sid');
             if (!uid) return;
+            var that = this;
             this.$confirm('确定要删除这件商品吗？此操作不可恢复。', '警告', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            }).then(() => {
-                this.axios.delete(`/site/goods/${goods.goods_id}`, {
-                    data: { uid }
-                }).then(res => {
+            }).then(function() {
+                that.axios.delete('/site/goods/' + goods.goods_id, {
+                    data: { uid: uid }
+                }).then(function(res) {
                     if (res.data.success) {
-                        this.$message.success('商品删除成功');
-                        this.getMyGoods();
+                        that.$message.success('商品删除成功');
+                        that.getMyGoods();
                     } else {
-                        this.$message.error(res.data.msg || '删除失败');
+                        that.$message.error(res.data.msg || '删除失败');
                     }
-                }, err => {
+                }, function(err) {
                     console.error(err);
-                    this.$message.error('删除失败');
+                    that.$message.error('删除失败');
                 });
-            }).catch(() => {});
+            }).catch(function() {});
         },
-        goToDetail(goods) {
+        goToDetail: function(goods) {
             this.$router.push({ path: '/site/goodsDetail', query: { id: goods.goods_id } });
         },
-        goToPublish() {
+        goToPublish: function() {
             this.$router.push({ name: 'publish' });
         },
-        handleImgError(e) {
+        handleImgError: function(e) {
             e.target.src = this.defaultImage;
         }
     }
