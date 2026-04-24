@@ -6,14 +6,28 @@ module.exports = {
         try {
             var body = ctx.request.body;
             var uid = body.uid;
-            var name = body.name;
-            var phone = body.phone;
-            var province = body.province || '';
-            var city = body.city || '';
-            var district = body.district || '';
-            var detail = body.detail || '';
-            var address = body.address || (province + city + district + detail);
-            var is_default = body.is_default || false;
+            
+            var name, phone, province, city, district, detail, address, is_default;
+            
+            if (body.form) {
+                name = body.form.name;
+                phone = body.form.phone;
+                address = body.form.address;
+                province = '';
+                city = '';
+                district = '';
+                detail = '';
+                is_default = false;
+            } else {
+                name = body.name;
+                phone = body.phone;
+                province = body.province || '';
+                city = body.city || '';
+                district = body.district || '';
+                detail = body.detail || '';
+                address = body.address || (province + city + district + detail);
+                is_default = body.is_default || false;
+            }
 
             var data = await AddressService.insertAddress(uid, {
                 name: name,
@@ -27,18 +41,27 @@ module.exports = {
             });
 
             ctx.response.type = 'utf-8';
-            ctx.response.body = {
-                success: true,
-                data: data,
-                msg: '添加成功'
-            };
+            if (body.form) {
+                ctx.response.body = 200;
+            } else {
+                ctx.response.body = {
+                    success: true,
+                    data: data,
+                    msg: '添加成功'
+                };
+            }
         } catch (e) {
             console.error('addAddress error:', e);
             ctx.response.type = 'utf-8';
-            ctx.response.body = {
-                success: false,
-                msg: '添加失败：' + e.message
-            };
+            var body = ctx.request.body;
+            if (body.form) {
+                ctx.response.body = 'insert failed';
+            } else {
+                ctx.response.body = {
+                    success: false,
+                    msg: '添加失败：' + e.message
+                };
+            }
         }
     },
 
