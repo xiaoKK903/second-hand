@@ -137,7 +137,7 @@ async function runMigration() {
             );
             
             if (!existingAdmin || existingAdmin.length === 0) {
-                console.log('创建管理员账号...');
+                console.log('创建管理员账号 admin123...');
                 var hashedPassword = bcrypt.hashSync(adminPassword, 10);
                 
                 var [userColumns] = await sequelize.query('SHOW COLUMNS FROM user_table');
@@ -176,18 +176,16 @@ async function runMigration() {
                     type: Sequelize.QueryTypes.INSERT
                 });
                 
-                console.log('✅ 默认管理员账号创建成功');
-                console.log('   手机号: admin123');
-                console.log('   密码: admin123');
+                console.log('✅ 默认管理员账号 admin123 创建成功');
             } else {
-                console.log('✅ 管理员账号已存在');
+                console.log('✅ 管理员账号 admin123 已存在');
                 
                 var adminData = existingAdmin;
                 if (Array.isArray(existingAdmin)) {
                     adminData = existingAdmin[0];
                 }
                 
-                if (adminData.role !== 'admin') {
+                if (!adminData.role || adminData.role !== 'admin') {
                     console.log('更新角色为管理员...');
                     await sequelize.query(
                         "UPDATE user_table SET role = 'admin' WHERE phone_num = ?",
@@ -196,21 +194,97 @@ async function runMigration() {
                             type: Sequelize.QueryTypes.UPDATE
                         }
                     );
-                    console.log('✅ 已将该账号设置为管理员');
+                    console.log('✅ 已将 admin123 设置为管理员');
                 } else {
-                    console.log('✅ 该账号已是管理员');
+                    console.log('✅ admin123 已是管理员');
                 }
             }
         } catch (e) {
-            console.error('⚠️  创建管理员账号失败:', e.message);
+            console.error('⚠️  创建管理员账号 admin123 失败:', e.message);
             console.error(e.stack);
-            console.log('');
-            console.log('请手动执行以下步骤：');
-            console.log('1. 检查 user_table 表是否有以下字段：nickname, role, is_active, created_at');
-            console.log('2. 手动插入管理员账号：');
-            console.log("   INSERT INTO user_table (phone_num, password, nickname, role, is_active, created_at) VALUES ('admin123', '加密后的密码', '平台管理员', 'admin', 1, NOW())");
-            console.log('');
-            console.log('或者使用工具生成密码后手动插入。');
+        }
+        
+        console.log('\n========== 4. 创建第二个管理员账号 (admin) ==========');
+        
+        try {
+            var bcrypt = require('bcryptjs');
+            var admin2Phone = 'admin';
+            var admin2Password = 'admin123';
+            
+            var [existingAdmin2] = await sequelize.query(
+                "SELECT * FROM user_table WHERE phone_num = ?",
+                {
+                    replacements: [admin2Phone],
+                    type: Sequelize.QueryTypes.SELECT
+                }
+            );
+            
+            if (!existingAdmin2 || existingAdmin2.length === 0) {
+                console.log('创建管理员账号 admin...');
+                var hashedPassword2 = bcrypt.hashSync(admin2Password, 10);
+                
+                var [userColumns] = await sequelize.query('SHOW COLUMNS FROM user_table');
+                var fields = userColumns.map(function(col) { return col.Field; });
+                
+                var insertFields = ['phone_num', 'password'];
+                var insertValues = [admin2Phone, hashedPassword2];
+                var placeholders = ['?', '?'];
+                
+                if (fields.indexOf('nickname') !== -1) {
+                    insertFields.push('nickname');
+                    insertValues.push('超级管理员');
+                    placeholders.push('?');
+                }
+                if (fields.indexOf('role') !== -1) {
+                    insertFields.push('role');
+                    insertValues.push('admin');
+                    placeholders.push('?');
+                }
+                if (fields.indexOf('is_active') !== -1) {
+                    insertFields.push('is_active');
+                    insertValues.push(1);
+                    placeholders.push('?');
+                }
+                if (fields.indexOf('created_at') !== -1) {
+                    insertFields.push('created_at');
+                    placeholders.push('NOW()');
+                }
+                
+                var sql2 = "INSERT INTO user_table (" + insertFields.join(', ') + ") VALUES (" + placeholders.join(', ') + ")";
+                
+                await sequelize.query(sql2, {
+                    replacements: insertValues,
+                    type: Sequelize.QueryTypes.INSERT
+                });
+                
+                console.log('✅ 管理员账号 admin 创建成功');
+                console.log('   手机号: admin');
+                console.log('   密码: admin123');
+            } else {
+                console.log('✅ 管理员账号 admin 已存在');
+                
+                var admin2Data = existingAdmin2;
+                if (Array.isArray(existingAdmin2)) {
+                    admin2Data = existingAdmin2[0];
+                }
+                
+                if (!admin2Data.role || admin2Data.role !== 'admin') {
+                    console.log('更新角色为管理员...');
+                    await sequelize.query(
+                        "UPDATE user_table SET role = 'admin' WHERE phone_num = ?",
+                        {
+                            replacements: [admin2Phone],
+                            type: Sequelize.QueryTypes.UPDATE
+                        }
+                    );
+                    console.log('✅ 已将 admin 设置为管理员');
+                } else {
+                    console.log('✅ admin 已是管理员');
+                }
+            }
+        } catch (e) {
+            console.error('⚠️  创建管理员账号 admin 失败:', e.message);
+            console.error(e.stack);
         }
         
         console.log('\n========== 迁移完成 ==========');
@@ -229,8 +303,8 @@ async function runMigration() {
         console.log('    - admin_operated_at: 管理员操作时间');
         console.log('');
         console.log('默认管理员账号：');
-        console.log('    手机号: admin123');
-        console.log('    密码: admin123');
+        console.log('    账号1: admin123 / 密码: admin123');
+        console.log('    账号2: admin / 密码: admin123');
         
     } catch (e) {
         console.error('❌ 数据库连接失败: ' + e.message);
