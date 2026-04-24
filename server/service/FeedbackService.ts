@@ -1,8 +1,8 @@
-const feedbackModel = require('../model/FeedbackModel.ts');
+var feedbackModel = require('../model/FeedbackModel.ts');
 
 module.exports = {
     // 添加反馈
-    insertFeedback: async (uid, content, add_time) => {
+    insertFeedback: async function(uid, content, add_time) {
         return await feedbackModel.Feedback.create({
             user_id: uid,
             content: content,

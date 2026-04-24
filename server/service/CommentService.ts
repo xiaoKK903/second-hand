@@ -1,6 +1,6 @@
-const commentModel = require('../model/CommentModel.ts');
-const userModel = require('../model/UserModel.ts');
-const db = require('../config/db.ts');
+var commentModel = require('../model/CommentModel.ts');
+var userModel = require('../model/UserModel.ts');
+var db = require('../config/db.ts');
 
 module.exports = {
     getCommentsByGoodsId: async function(goods_id, options) {

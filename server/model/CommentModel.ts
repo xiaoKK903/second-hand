@@ -1,6 +1,6 @@
-const db = require('../config/db.ts');
+var db = require('../config/db.ts');
 
-const Comment = db.sequelize.define('comment', {
+var Comment = db.sequelize.define('comment', {
     comment_id: {
         type: db.DataTypes.INTEGER,
         allowNull: false,

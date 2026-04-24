@@ -1,11 +1,11 @@
-const imageModel = require('../model/ImageModel.ts');
+var imageModel = require('../model/ImageModel.ts');
 
 module.exports = {
     // 批量插入
-    insertImages: async (images) => {
+    insertImages: async function(images) {
         return await imageModel.Image.bulkCreate(images);
     },
-    findImages: async (goods_id) => {
+    findImages: async function(goods_id) {
         return await imageModel.Image.findAll({
             where: {
                 goods_id: goods_id

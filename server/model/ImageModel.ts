@@ -1,6 +1,6 @@
-const db = require('../config/db.ts');
+var db = require('../config/db.ts');
 
-const Image = db.sequelize.define('image', {
+var Image = db.sequelize.define('image', {
     image_id: {
         type: db.DataTypes.INTEGER,
         allowNull: false,

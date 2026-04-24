@@ -11,7 +11,7 @@ var CommentController = require('../controller/CommentController.ts');
 var ChatController = require('../controller/ChatController.ts');
 var AdminController = require('../controller/AdminController.ts');
 
-module.exports = (app) => {
+module.exports = function(app) {
     router.get('/site/conditions', GoodsController.getConditions);
     router.get('/site/tags', GoodsController.getTags);
     router.get('/site/goods/count', GoodsController.getGoodsCount);

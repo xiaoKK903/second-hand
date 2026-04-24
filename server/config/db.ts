@@ -9,9 +9,9 @@ var sequelize = new Sequelize(
     }
 );
 
-sequelize.authenticate().then(() => {
+sequelize.authenticate().then(function() {
     console.log('connected');
-}).catch(err => {
+}).catch(function(err) {
     console.error('connect failed:' + err);
 });
 
