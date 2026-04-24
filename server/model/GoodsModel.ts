@@ -1,6 +1,6 @@
-const db = require('../config/db.ts');
+var db = require('../config/db.ts');
 
-const Goods = db.sequelize.define('goods', {
+var Goods = db.sequelize.define('goods', {
     goods_id: {
         type: db.DataTypes.INTEGER,
         allowNull: false,
@@ -39,7 +39,7 @@ const Goods = db.sequelize.define('goods', {
         allowNull: true,
         field: 'goods_images',
         get() {
-            const rawValue = this.getDataValue('goods_images');
+            var rawValue = this.getDataValue('goods_images');
             return rawValue ? JSON.parse(rawValue) : [];
         },
         set(value) {
@@ -76,7 +76,7 @@ const Goods = db.sequelize.define('goods', {
         field: 'tags',
         comment: '标签：包邮、可小刀、自提、价格面议、支持自提、可租可买',
         get() {
-            const rawValue = this.getDataValue('tags');
+            var rawValue = this.getDataValue('tags');
             return rawValue ? JSON.parse(rawValue) : [];
         },
         set(value) {
