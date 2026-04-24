@@ -317,6 +317,11 @@ export default {
             this.$refs[formName].validate(function(valid) {
                 if (valid) {
                     var uid = that.$cookieStore.getCookie('sid');
+                    if (!uid) {
+                        that.$message.error('请先登录');
+                        that.$router.push({ name: 'login' });
+                        return;
+                    }
                     that.axios.post('/site/user', {
                         uid: uid,
                         form: {
@@ -324,17 +329,22 @@ export default {
                             checkPass: that.ruleForm.checkPass
                         }
                     }).then(function(res) {
-                        if (res.data === 201) {
+                        if (res.data && res.data.code === 201) {
                             that.$message.error('原密码错误!');
-                        } else {
+                        } else if (res.data && res.data.success) {
                             that.$message({
-                                message: '修改密码成功',
+                                message: res.data.msg || '修改密码成功',
                                 type: 'success'
                             });
                             that.$refs[formName].resetFields();
+                        } else if (res.data && res.data.msg) {
+                            that.$message.error(res.data.msg);
+                        } else {
+                            that.$message.error('修改失败，请稍后重试');
                         }
                     }, function(err) {
                         console.error(err);
+                        that.$message.error('网络错误，请稍后重试');
                     });
                 } else {
                     return false;

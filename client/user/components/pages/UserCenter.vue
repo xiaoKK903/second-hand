@@ -5,8 +5,8 @@
                 <div class="user-header">
                     <div class="user-info">
                         <div class="user-avatar">
-                            <img :src="user.avatar || '../../../static/img/timg.jpg'" v-if="user.avatar">
-                            <img src="../../../static/img/timg.jpg" v-else>
+                            <img :src="user.avatar" v-if="user.avatar">
+                            <div class="default-avatar" v-else></div>
                         </div>
                         <div class="user-detail">
                             <div class="user-name" v-if="user.nickname">{{ user.nickname }}</div>
@@ -213,6 +213,12 @@ export default {
             width 100%
             height 100%
             object-fit cover
+
+        .default-avatar
+            width 100%
+            height 100%
+            background url('/static/img/timg.jpg') center center no-repeat
+            background-size cover
 
     .user-name
         font-size 20px

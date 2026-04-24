@@ -107,17 +107,47 @@ module.exports = {
     
     updatePass: async function(ctx, next) {
         await next();
-        var uid = ctx.request.body.uid;
-        var form = ctx.request.body.form;
-        var data = await UserService.findUser(uid);
-        var user = data[0].dataValues;
-        if (tools.debcrypt(form.pass, user.password)) {
-            var result = await UserService.updatePass(uid, tools.enbcrypt(form.checkPass));
-            ctx.response.type = 'utf-8';
-            ctx.response.body = result;
-        } else {
-            ctx.response.type = 'utf-8';
-            ctx.response.body = 201;
+        try {
+            var uid = ctx.request.body.uid;
+            var form = ctx.request.body.form;
+            
+            if (!uid) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '请先登录' };
+                return;
+            }
+            
+            if (!form || !form.pass || !form.checkPass) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '请填写完整的密码信息' };
+                return;
+            }
+            
+            var data = await UserService.findUser(uid);
+            
+            if (!data || data.length === 0) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '用户不存在' };
+                return;
+            }
+            
+            var user = data[0].dataValues;
+            
+            if (tools.debcrypt(form.pass, user.password)) {
+                var result = await UserService.updatePass(uid, tools.enbcrypt(form.checkPass));
+                ctx.response.type = 'application/json';
+                ctx.response.body = { 
+                    success: result[0] > 0, 
+                    msg: result[0] > 0 ? '密码修改成功' : '密码修改失败' 
+                };
+            } else {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '原密码错误', code: 201 };
+            }
+        } catch (e) {
+            console.error('updatePass error:', e);
+            ctx.response.type = 'application/json';
+            ctx.response.body = { success: false, msg: '服务器错误: ' + e.message };
         }
     },
     
@@ -131,18 +161,19 @@ module.exports = {
                 return;
             }
             
-            var updateData = {};
-            if (ctx.request.body.nickname !== undefined) {
-                updateData.nickname = ctx.request.body.nickname;
+            var updateData: any = {};
+            var body: any = ctx.request.body;
+            if (body.nickname !== undefined) {
+                updateData.nickname = body.nickname;
             }
-            if (ctx.request.body.avatar !== undefined) {
-                updateData.avatar = ctx.request.body.avatar;
+            if (body.avatar !== undefined) {
+                updateData.avatar = body.avatar;
             }
-            if (ctx.request.body.bio !== undefined) {
-                updateData.bio = ctx.request.body.bio;
+            if (body.bio !== undefined) {
+                updateData.bio = body.bio;
             }
-            if (ctx.request.body.contact !== undefined) {
-                updateData.contact = ctx.request.body.contact;
+            if (body.contact !== undefined) {
+                updateData.contact = body.contact;
             }
             
             console.log('updateProfile called:', { uid: uid, data: updateData });
