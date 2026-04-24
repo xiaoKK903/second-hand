@@ -24,12 +24,15 @@ module.exports = (app) => {
     router.post('/site/goods', GoodsController.publishGoods);
     router.get('/site/search', GoodsController.searchGoods);
     router.get('/site/category', CategoryController.getCategory);
-    router.get('/site/goods/:id', GoodsController.getGoodsByCategory);
     router.get('/site/goodsPage', GoodsController.getGoodsByPage);
     router.get('/site/findGoods/:id', GoodsController.getGoodsById);
     router.post('/site/login', UserController.doLogin);
     router.post('/site/register', UserController.doRegister);
+    
+    router.post('/site/user/profile', UserController.updateProfile);
+    router.get('/site/seller/:user_id', UserController.getSellerProfile);
     router.get('/site/user/:uid', UserController.getUserById);
+    
     router.post('/site/user', UserController.updatePass);
     router.get('/site/recommend', GoodsController.getRecommendGoods);
     router.post('/site/addToCart', CartController.addToCart);
@@ -61,8 +64,7 @@ module.exports = (app) => {
     router.post('/chat/session/:session_id/read', ChatController.markAsRead);
     router.get('/chat/unread', ChatController.getUnreadCount);
     
-    router.post('/site/user/profile', UserController.updateProfile);
-    router.get('/site/seller/:user_id', UserController.getSellerProfile);
+    router.get('/site/goods/:id', GoodsController.getGoodsByCategory);
     
     app.use(router.routes()).use(router.allowedMethods());
 };
