@@ -1,9 +1,15 @@
 {
     "compilerOptions": {
-        "target": "es5",   // 编译目标平台
+        "target": "es5",
         "module": "commonjs",
         "sourceMap": true,
-        "lib": ["es2015", "es2016"], //添加需要的解析的语法，否则TS会检测出错
+        "lib": ["es2015", "es2016", "dom"],
+        "skipLibCheck": true,
+        "noImplicitAny": false,
+        "strict": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true
     },
     "include": ["controller", "routes", "service", "service", "model", "config"],
     "exclude": ["node_modules", "dist"]

@@ -33,8 +33,8 @@ module.exports = {
             }
         });
     },
-    updateProfile: async function(uid, data) {
-        var updateData = {
+    updateProfile: async function(uid, data: any) {
+        var updateData: any = {
             updated_at: db.Sequelize.literal('CURRENT_TIMESTAMP')
         };
         
