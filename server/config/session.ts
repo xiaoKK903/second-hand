@@ -1,8 +1,8 @@
-const session = require('koa-session');
+var session = require('koa-session');
 
-module.exports = (app) => {
+module.exports = function(app) {
     app.keys = [process.env.SESSION_KEY || 'some-secret-hurr-change-me'];
-    const CONFIG = {
+    var CONFIG = {
         key: 'koa:sess',
         maxAge: 86400000,
         overwrite: true,

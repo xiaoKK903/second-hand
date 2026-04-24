@@ -1,12 +1,12 @@
-const orderModel = require('../model/OrderModel.ts');
+var orderModel = require('../model/OrderModel.ts');
 
 module.exports = {
     // 可批量插入订单记录
-    insertOrder: async (orders) => {
+    insertOrder: async function(orders) {
         return await orderModel.Order.bulkCreate(orders);
     },
     // 查询用户订单(买方)
-    findUserOrders: async (uid) => {
+    findUserOrders: async function(uid) {
         return await orderModel.Order.findAll({
             where: {
                 buyer_id: uid
@@ -14,7 +14,7 @@ module.exports = {
         })
     },
     // 查询卖方订单
-    findPublisherOrders: async (uid) => {
+    findPublisherOrders: async function(uid) {
         return await orderModel.Order.findAll({
             where: {
                 seller_id: uid
@@ -22,7 +22,7 @@ module.exports = {
         })
     },
     // 设置订单为已完成
-    setOrderStatus: async (order_id) => {
+    setOrderStatus: async function(order_id) {
         return await orderModel.Order.update({
             order_status: 2
         }, {

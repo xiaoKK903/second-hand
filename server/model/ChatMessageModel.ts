@@ -1,6 +1,6 @@
-const db = require('../config/db.ts');
+var db = require('../config/db.ts');
 
-const ChatMessage = db.sequelize.define('chat_message', {
+var ChatMessage = db.sequelize.define('chat_message', {
     message_id: {
         type: db.DataTypes.INTEGER,
         allowNull: false,

@@ -1,16 +1,16 @@
-const cartModel = require('../model/CartModel.ts');
+var cartModel = require('../model/CartModel.ts');
 
 module.exports = {
     // 添加到购物车
-    addToCart: async (uid, gid, count) => {
+    addToCart: async function(uid, gid, count) {
         return await cartModel.Cart.create({
             user_id: uid,
             goods_id: gid,
-            count
+            count: count
         })
     },
     // 获取用户购物车
-    getUserCart: async (uid) => {
+    getUserCart: async function(uid) {
         return await cartModel.Cart.findAll({
             where: {
                 user_id: uid
@@ -18,7 +18,7 @@ module.exports = {
         })
     },
     // 修改购物车商品数量
-    changeCartCount: async (gid, count) => {
+    changeCartCount: async function(gid, count) {
         return await cartModel.Cart.update({
             count: count
         }, {
@@ -28,7 +28,7 @@ module.exports = {
         })
     },
     // 删除商品
-    delCartGoods: async (cart_id) => {
+    delCartGoods: async function(cart_id) {
         return await cartModel.Cart.destroy({
             where: {
                 cart_id: cart_id
@@ -36,7 +36,7 @@ module.exports = {
         })
     },
     // 根据user_id和goods_id删除
-    delCart: async (user_id, goods_id) => {
+    delCart: async function(user_id, goods_id) {
         return await cartModel.Cart.destroy({
             where: {
                 user_id: user_id,

@@ -111,7 +111,11 @@ export default {
                 var uid = this.$cookieStore.getCookie('sid');
                 var that = this;
                 this.axios.get('/site/user/' + uid).then(function(res) {
-                    that.user = res.data[0];
+                    if (res.data && res.data.success && res.data.data) {
+                        that.user = res.data.data;
+                    } else if (res.data && res.data.length && res.data.length > 0) {
+                        that.user = res.data[0];
+                    }
                 }, function(err) {
                     console.error(err);
                 })
