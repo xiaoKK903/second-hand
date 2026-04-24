@@ -42,7 +42,10 @@ module.exports = function(app) {
     router.post('/site/delCartGoods', CartController.delCartGoods);
     router.post('/site/emptyCart', CartController.emptyCart);
     router.post('/site/addAddress', AddressController.addAddress);
+    router.post('/site/address/update', AddressController.updateAddress);
     router.get('/site/getAddress/:uid', AddressController.getAddress);
+    router.get('/site/address/default/:uid', AddressController.getDefaultAddress);
+    router.post('/site/address/setDefault', AddressController.setDefaultAddress);
     router.get('/site/getReceiverAddress/:aid', AddressController.getReceiverAddress);
     router.post('/site/delAddress', AddressController.delAddress);
     router.post('/site/feedback', FeedbackController.addFeedback);
