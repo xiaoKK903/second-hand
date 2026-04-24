@@ -67,7 +67,7 @@
                                 <i class="el-icon-user"></i>
                             </div>
                             <div class="stat-info">
-                                <div class="stat-value">{{ stats.users?.total || 0 }}</div>
+                                <div class="stat-value">{{ (stats.users && stats.users.total) || 0 }}</div>
                                 <div class="stat-label">总用户数</div>
                             </div>
                         </div>
@@ -76,7 +76,7 @@
                                 <i class="el-icon-circle-check"></i>
                             </div>
                             <div class="stat-info">
-                                <div class="stat-value">{{ stats.users?.active || 0 }}</div>
+                                <div class="stat-value">{{ (stats.users && stats.users.active) || 0 }}</div>
                                 <div class="stat-label">活跃用户</div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                                 <i class="el-icon-goods"></i>
                             </div>
                             <div class="stat-info">
-                                <div class="stat-value">{{ stats.goods?.total || 0 }}</div>
+                                <div class="stat-value">{{ (stats.goods && stats.goods.total) || 0 }}</div>
                                 <div class="stat-label">商品总数</div>
                             </div>
                         </div>
@@ -94,7 +94,7 @@
                                 <i class="el-icon-time"></i>
                             </div>
                             <div class="stat-info">
-                                <div class="stat-value pending-value">{{ stats.goods?.pending || 0 }}</div>
+                                <div class="stat-value pending-value">{{ (stats.goods && stats.goods.pending) || 0 }}</div>
                                 <div class="stat-label">待审核商品</div>
                             </div>
                         </div>
@@ -103,7 +103,7 @@
                                 <i class="el-icon-success"></i>
                             </div>
                             <div class="stat-info">
-                                <div class="stat-value sold-value">{{ stats.goods?.sold || 0 }}</div>
+                                <div class="stat-value sold-value">{{ (stats.goods && stats.goods.sold) || 0 }}</div>
                                 <div class="stat-label">已成交</div>
                             </div>
                         </div>
@@ -112,7 +112,7 @@
                                 <i class="el-icon-check"></i>
                             </div>
                             <div class="stat-info">
-                                <div class="stat-value approved-value">{{ stats.goods?.approved || 0 }}</div>
+                                <div class="stat-value approved-value">{{ (stats.goods && stats.goods.approved) || 0 }}</div>
                                 <div class="stat-label">已通过审核</div>
                             </div>
                         </div>
@@ -123,18 +123,18 @@
                         <div class="audit-status-bar">
                             <div 
                                 class="status-bar pending-bar" 
-                                :style="{ width: getPercentage(stats.goods?.pending, stats.goods?.total) + '%' }">
-                                <span v-if="stats.goods?.pending > 0">待审核 {{ stats.goods?.pending }}</span>
+                                :style="{ width: getPercentage(stats.goods && stats.goods.pending, stats.goods && stats.goods.total) + '%' }">
+                                <span v-if="stats.goods && stats.goods.pending > 0">待审核 {{ stats.goods.pending }}</span>
                             </div>
                             <div 
                                 class="status-bar approved-bar" 
-                                :style="{ width: getPercentage(stats.goods?.approved, stats.goods?.total) + '%' }">
-                                <span v-if="stats.goods?.approved > 0">已通过 {{ stats.goods?.approved }}</span>
+                                :style="{ width: getPercentage(stats.goods && stats.goods.approved, stats.goods && stats.goods.total) + '%' }">
+                                <span v-if="stats.goods && stats.goods.approved > 0">已通过 {{ stats.goods.approved }}</span>
                             </div>
                             <div 
                                 class="status-bar rejected-bar" 
-                                :style="{ width: getPercentage(stats.goods?.rejected, stats.goods?.total) + '%' }">
-                                <span v-if="stats.goods?.rejected > 0">已拒绝 {{ stats.goods?.rejected }}</span>
+                                :style="{ width: getPercentage(stats.goods && stats.goods.rejected, stats.goods && stats.goods.total) + '%' }">
+                                <span v-if="stats.goods && stats.goods.rejected > 0">已拒绝 {{ stats.goods.rejected }}</span>
                             </div>
                         </div>
                         <div class="status-legend">
@@ -460,7 +460,8 @@ export default {
     },
     computed: {
         pendingGoodsCount: function() {
-            return this.stats.goods?.pending || 0;
+            var goods = this.stats && this.stats.goods;
+            return goods ? (goods.pending || 0) : 0;
         },
         pendingUserCount: function() {
             return 0;
