@@ -41,50 +41,73 @@ module.exports = {
 
     publishGoods: async function(ctx, next) {
         await next();
-        var body = ctx.request.body;
-        var name = body.name;
-        if (!name && body.form) {
-            name = body.form.name;
+        try {
+            var body = ctx.request.body;
+            console.log('publishGoods request body:', JSON.stringify(body));
+            
+            var name = body.name;
+            if (!name && body.form) {
+                name = body.form.name;
+            }
+            var categoryId = body.categoryId;
+            if (!categoryId && body.form) {
+                categoryId = body.form.categoryId;
+            }
+            var price = body.price;
+            if (!price && body.form) {
+                price = body.form.price;
+            }
+            var num = body.num;
+            if (!num && body.form) {
+                num = body.form.num;
+            }
+            var desc = body.desc;
+            if (!desc && body.form) {
+                desc = body.form.desc;
+            }
+            var imageUrl = body.imageUrl;
+            if (!imageUrl && body.form) {
+                imageUrl = body.form.imageUrl;
+            }
+            
+            console.log('publishGoods params:', {
+                name: name,
+                categoryId: categoryId,
+                price: price,
+                num: num,
+                desc: desc,
+                uid: body.uid
+            });
+            
+            var data = await GoodsService.publishGoods({
+                name: name,
+                categoryId: categoryId,
+                price: price,
+                originalPrice: body.originalPrice,
+                num: num || 1,
+                desc: desc,
+                imageUrl: imageUrl,
+                goods_images: body.goods_images || [],
+                uid: body.uid,
+                condition: body.condition || '轻微使用',
+                tags: body.tags || []
+            });
+            console.log('publishGoods success, goods_id:', data.goods_id);
+            ctx.response.type = 'utf-8';
+            ctx.response.body = {
+                success: true,
+                goods_id: data.goods_id,
+                data: data
+            };
+        } catch (e) {
+            console.error('publishGoods error:', e.message);
+            console.error('publishGoods stack:', e.stack);
+            ctx.response.type = 'utf-8';
+            ctx.response.body = {
+                success: false,
+                msg: '发布失败：' + e.message
+            };
         }
-        var categoryId = body.categoryId;
-        if (!categoryId && body.form) {
-            categoryId = body.form.categoryId;
-        }
-        var price = body.price;
-        if (!price && body.form) {
-            price = body.form.price;
-        }
-        var num = body.num;
-        if (!num && body.form) {
-            num = body.form.num;
-        }
-        var desc = body.desc;
-        if (!desc && body.form) {
-            desc = body.form.desc;
-        }
-        var imageUrl = body.imageUrl;
-        if (!imageUrl && body.form) {
-            imageUrl = body.form.imageUrl;
-        }
-        var data = await GoodsService.publishGoods({
-            name: name,
-            categoryId: categoryId,
-            price: price,
-            originalPrice: body.originalPrice,
-            num: num || 1,
-            desc: desc,
-            imageUrl: imageUrl,
-            goods_images: body.goods_images || [],
-            uid: body.uid,
-            condition: body.condition || '轻微使用',
-            tags: body.tags || []
-        });
-        ctx.response.type = 'utf-8';
-        ctx.response.body = {
-            success: true,
-            goods_id: data.goods_id,
-            data: data
-        };
     },
 
     searchGoods: async function(ctx, next) {

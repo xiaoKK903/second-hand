@@ -36,6 +36,21 @@ module.exports = {
     },
 
     publishGoods: async function(data) {
+        console.log('GoodsService.publishGoods data:', JSON.stringify(data));
+        var goods_images_str = '';
+        try {
+            goods_images_str = JSON.stringify(data.goods_images || []);
+        } catch (e) {
+            goods_images_str = '[]';
+        }
+        
+        var tags_str = '';
+        try {
+            tags_str = JSON.stringify(data.tags || []);
+        } catch (e) {
+            tags_str = '[]';
+        }
+        
         var goodsData = {
             goods_name: data.name,
             goods_price: data.price,
@@ -43,15 +58,16 @@ module.exports = {
             count: data.num || 1,
             goods_desc: data.desc,
             goods_image: data.imageUrl || (data.goods_images && data.goods_images[0]) || '',
-            goods_images: data.goods_images || [],
+            goods_images: goods_images_str,
             category_id: data.categoryId,
             user_id: data.uid,
             condition: data.condition || '轻微使用',
-            tags: data.tags || [],
+            tags: tags_str,
             status: 'active',
             audit_status: 'approved',
             views: 0
         };
+        console.log('GoodsService.publishGoods goodsData:', JSON.stringify(goodsData));
         return await goodsModel.Goods.create(goodsData);
     },
 
