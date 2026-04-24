@@ -1,7 +1,7 @@
-const GoodsService = require('../service/GoodsService.ts');
+var GoodsService = require('../service/GoodsService.ts');
 
 module.exports = {
-    getConditions: async (ctx, next) => {
+    getConditions: async function(ctx, next) {
         await next();
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify({
@@ -10,7 +10,7 @@ module.exports = {
         });
     },
 
-    getTags: async (ctx, next) => {
+    getTags: async function(ctx, next) {
         await next();
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify({
@@ -19,9 +19,9 @@ module.exports = {
         });
     },
 
-    getAllGoods: async (ctx, next) => {
+    getAllGoods: async function(ctx, next) {
         await next();
-        const options = {};
+        var options = {};
         if (ctx.request.query.condition) {
             options.condition = ctx.request.query.condition;
         }
@@ -34,22 +34,46 @@ module.exports = {
         if (ctx.request.query.maxPrice !== undefined) {
             options.maxPrice = Number(ctx.request.query.maxPrice);
         }
-        let data = await GoodsService.getAllGoods(options);
+        var data = await GoodsService.getAllGoods(options);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    publishGoods: async (ctx, next) => {
+    publishGoods: async function(ctx, next) {
         await next();
-        const body = ctx.request.body;
-        const data = await GoodsService.publishGoods({
-            name: body.name || body.form?.name,
-            categoryId: body.categoryId || body.form?.categoryId,
-            price: body.price || body.form?.price,
+        var body = ctx.request.body;
+        var name = body.name;
+        if (!name && body.form) {
+            name = body.form.name;
+        }
+        var categoryId = body.categoryId;
+        if (!categoryId && body.form) {
+            categoryId = body.form.categoryId;
+        }
+        var price = body.price;
+        if (!price && body.form) {
+            price = body.form.price;
+        }
+        var num = body.num;
+        if (!num && body.form) {
+            num = body.form.num;
+        }
+        var desc = body.desc;
+        if (!desc && body.form) {
+            desc = body.form.desc;
+        }
+        var imageUrl = body.imageUrl;
+        if (!imageUrl && body.form) {
+            imageUrl = body.form.imageUrl;
+        }
+        var data = await GoodsService.publishGoods({
+            name: name,
+            categoryId: categoryId,
+            price: price,
             originalPrice: body.originalPrice,
-            num: body.num || body.form?.num || 1,
-            desc: body.desc || body.form?.desc,
-            imageUrl: body.imageUrl || body.form?.imageUrl,
+            num: num || 1,
+            desc: desc,
+            imageUrl: imageUrl,
             goods_images: body.goods_images || [],
             uid: body.uid,
             condition: body.condition || '轻微使用',
@@ -59,13 +83,13 @@ module.exports = {
         ctx.response.body = {
             success: true,
             goods_id: data.goods_id,
-            data
+            data: data
         };
     },
 
-    searchGoods: async (ctx, next) => {
+    searchGoods: async function(ctx, next) {
         await next();
-        const options = {};
+        var options = {};
         if (ctx.request.query.condition) {
             options.condition = ctx.request.query.condition;
         }
@@ -78,130 +102,142 @@ module.exports = {
         if (ctx.request.query.maxPrice !== undefined) {
             options.maxPrice = Number(ctx.request.query.maxPrice);
         }
-        let data = await GoodsService.searchGoods(ctx.request.query.keyword, options);
+        var data = await GoodsService.searchGoods(ctx.request.query.keyword, options);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    getGoodsByCategory: async (ctx, next) => {
+    getGoodsByCategory: async function(ctx, next) {
         await next();
-        const options = {};
+        var options = {};
         if (ctx.request.query.condition) {
             options.condition = ctx.request.query.condition;
         }
-        let data = await GoodsService.getCategoryById(ctx.params.id, options);
+        var data = await GoodsService.getCategoryById(ctx.params.id, options);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    getGoodsByPage: async (ctx, next) => {
+    getGoodsByPage: async function(ctx, next) {
         await next();
-        let currentPage = Number(ctx.request.query.currentPage),
-            pageSize = Number(ctx.request.query.pageSize);
-        const options = {};
+        var currentPage = Number(ctx.request.query.currentPage);
+        var pageSize = Number(ctx.request.query.pageSize);
+        var options = {};
         if (ctx.request.query.condition) {
             options.condition = ctx.request.query.condition;
         }
         if (ctx.request.query.categoryId) {
             options.categoryId = Number(ctx.request.query.categoryId);
         }
-        let data = await GoodsService.getGoodsByPage(currentPage, pageSize, options);
+        var data = await GoodsService.getGoodsByPage(currentPage, pageSize, options);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    getGoodsById: async (ctx, next) => {
+    getGoodsById: async function(ctx, next) {
         await next();
-        const incrementViews = ctx.request.query.incrementViews !== 'false';
-        let data = await GoodsService.getGoodsById(ctx.params.id, incrementViews);
+        var incrementViews = ctx.request.query.incrementViews !== 'false';
+        var data = await GoodsService.getGoodsById(ctx.params.id, incrementViews);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    getRecommendGoods: async (ctx, next) => {
+    getRecommendGoods: async function(ctx, next) {
         await next();
-        const categoryId = ctx.request.query.categoryId ? Number(ctx.request.query.categoryId) : null;
-        const limit = ctx.request.query.limit ? Number(ctx.request.query.limit) : 40;
-        let data = await GoodsService.getRecommendGoods(categoryId, limit);
+        var categoryId = ctx.request.query.categoryId ? Number(ctx.request.query.categoryId) : null;
+        var limit = ctx.request.query.limit ? Number(ctx.request.query.limit) : 40;
+        var data = await GoodsService.getRecommendGoods(categoryId, limit);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    getMyGoods: async (ctx, next) => {
+    getMyGoods: async function(ctx, next) {
         await next();
-        const uid = ctx.request.query.uid || ctx.request.body.uid;
-        const status = ctx.request.query.status;
+        var uid = ctx.request.query.uid || ctx.request.body.uid;
+        var status = ctx.request.query.status;
         if (!uid) {
             ctx.response.type = 'utf-8';
             ctx.response.body = { success: false, msg: '用户未登录' };
             return;
         }
-        let data = await GoodsService.getMyGoods(uid, status);
+        var data = await GoodsService.getMyGoods(uid, status);
         ctx.response.type = 'charset=utf-8';
-        ctx.response.body = JSON.stringify({ success: true, data });
+        ctx.response.body = JSON.stringify({ success: true, data: data });
     },
 
-    updateGoodsStatus: async (ctx, next) => {
+    updateGoodsStatus: async function(ctx, next) {
         await next();
-        const { uid } = ctx.request.body;
-        const goodsId = ctx.params.id;
-        const { status } = ctx.request.body;
+        var body = ctx.request.body;
+        var uid = body.uid;
+        var goodsId = ctx.params.id;
+        var status = body.status;
         if (!uid) {
             ctx.response.type = 'utf-8';
             ctx.response.body = { success: false, msg: '用户未登录' };
             return;
         }
-        const result = await GoodsService.updateGoodsStatus(goodsId, uid, status);
+        var result = await GoodsService.updateGoodsStatus(goodsId, uid, status);
         ctx.response.type = 'utf-8';
         ctx.response.body = { success: result[0] > 0, msg: result[0] > 0 ? '操作成功' : '操作失败' };
     },
 
-    updateGoods: async (ctx, next) => {
+    updateGoods: async function(ctx, next) {
         await next();
-        const { uid, ...updateData } = ctx.request.body;
-        const goodsId = ctx.params.id;
+        var body = ctx.request.body;
+        var uid = body.uid;
+        var goodsId = ctx.params.id;
+        var updateData = {};
+        if (body.name !== undefined) updateData.name = body.name;
+        if (body.price !== undefined) updateData.price = body.price;
+        if (body.originalPrice !== undefined) updateData.originalPrice = body.originalPrice;
+        if (body.num !== undefined) updateData.num = body.num;
+        if (body.desc !== undefined) updateData.desc = body.desc;
+        if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
+        if (body.condition !== undefined) updateData.condition = body.condition;
+        if (body.tags !== undefined) updateData.tags = body.tags;
+        if (body.goods_images !== undefined) updateData.goods_images = body.goods_images;
         if (!uid) {
             ctx.response.type = 'utf-8';
             ctx.response.body = { success: false, msg: '用户未登录' };
             return;
         }
-        const result = await GoodsService.updateGoods(goodsId, uid, updateData);
+        var result = await GoodsService.updateGoods(goodsId, uid, updateData);
         ctx.response.type = 'utf-8';
         ctx.response.body = { success: result[0] > 0, msg: result[0] > 0 ? '更新成功' : '更新失败' };
     },
 
-    deleteGoods: async (ctx, next) => {
+    deleteGoods: async function(ctx, next) {
         await next();
-        const uid = ctx.request.query.uid || ctx.request.body.uid;
-        const goodsId = ctx.params.id;
+        var uid = ctx.request.query.uid || ctx.request.body.uid;
+        var goodsId = ctx.params.id;
         if (!uid) {
             ctx.response.type = 'utf-8';
             ctx.response.body = { success: false, msg: '用户未登录' };
             return;
         }
-        const result = await GoodsService.deleteGoods(goodsId, uid);
+        var result = await GoodsService.deleteGoods(goodsId, uid);
         ctx.response.type = 'utf-8';
         ctx.response.body = { success: result > 0, msg: result > 0 ? '删除成功' : '删除失败' };
     },
 
-    getGoodsByCondition: async (ctx, next) => {
+    getGoodsByCondition: async function(ctx, next) {
         await next();
-        let data = await GoodsService.getGoodsByCondition(ctx.params.condition);
+        var data = await GoodsService.getGoodsByCondition(ctx.params.condition);
         ctx.response.type = 'charset=utf-8';
         ctx.response.body = JSON.stringify(data);
     },
 
-    getGoodsCount: async (ctx, next) => {
+    getGoodsCount: async function(ctx, next) {
         await next();
-        const options = {};
+        var options = {};
         if (ctx.request.query.condition) {
             options.condition = ctx.request.query.condition;
         }
         if (ctx.request.query.categoryId) {
             options.categoryId = Number(ctx.request.query.categoryId);
         }
-        const count = await GoodsService.getGoodsCount(options);
+        var count = await GoodsService.getGoodsCount(options);
         ctx.response.type = 'utf-8';
-        ctx.response.body = { success: true, count };
+        ctx.response.body = { success: true, count: count };
     }
 };
