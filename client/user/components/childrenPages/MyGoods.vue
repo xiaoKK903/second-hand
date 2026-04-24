@@ -12,7 +12,13 @@
         <div class="goods-list" v-if="goodsList.length > 0">
             <div class="goods-item" v-for="goods in goodsList" :key="goods.goods_id">
                 <div class="goods-image" @click="goToDetail(goods)">
-                    <img :src="goods.goods_image || defaultImage" @error="handleImgError">
+                    <div v-if="goods.goods_image">
+                        <img :src="goods.goods_image">
+                    </div>
+                    <div v-else class="no-image-placeholder">
+                        <i class="el-icon-picture"></i>
+                        <span>暂无图片</span>
+                    </div>
                     <div class="goods-badges">
                         <span class="badge condition-badge" v-if="goods.condition">
                             {{ goods.condition }}
@@ -97,8 +103,7 @@ export default {
     data() {
         return {
             activeTab: 'all',
-            goodsList: [],
-            defaultImage: '/static/img/goods.webp'
+            goodsList: []
         }
     },
     created() {
@@ -217,9 +222,6 @@ export default {
         },
         goToPublish: function() {
             this.$router.push({ name: 'publish' });
-        },
-        handleImgError: function(e) {
-            e.target.src = this.defaultImage;
         }
     }
 }
