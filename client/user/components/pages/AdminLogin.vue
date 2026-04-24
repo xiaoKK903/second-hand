@@ -100,6 +100,8 @@ export default {
                             var uid = res.data.sid;
                             var user = res.data.user;
                             
+                            that.$cookieStore.delCookie('admin_uid');
+                            
                             if (user && user.role === 'admin') {
                                 that.$cookieStore.setCookie('admin_uid', uid, 86400000);
                                 that.$message({

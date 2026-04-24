@@ -1,15 +1,15 @@
-const router = require('koa-router')();
-const UserController = require('../controller/UserController.ts');
-const GoodsController = require('../controller/GoodsController.ts');
-const CategoryController = require('../controller/CategoryController.ts');
-const CartController = require('../controller/CartController.ts');
-const AddressController = require('../controller/AddressController.ts');
-const FeedbackController = require('../controller/FeedbackController.ts');
-const OrderController = require('../controller/OrderController.ts');
-const ImageController = require('../controller/ImageController.ts');
-const CommentController = require('../controller/CommentController.ts');
-const ChatController = require('../controller/ChatController.ts');
-const AdminController = require('../controller/AdminController.ts');
+var router = require('koa-router')();
+var UserController = require('../controller/UserController.ts');
+var GoodsController = require('../controller/GoodsController.ts');
+var CategoryController = require('../controller/CategoryController.ts');
+var CartController = require('../controller/CartController.ts');
+var AddressController = require('../controller/AddressController.ts');
+var FeedbackController = require('../controller/FeedbackController.ts');
+var OrderController = require('../controller/OrderController.ts');
+var ImageController = require('../controller/ImageController.ts');
+var CommentController = require('../controller/CommentController.ts');
+var ChatController = require('../controller/ChatController.ts');
+var AdminController = require('../controller/AdminController.ts');
 
 module.exports = (app) => {
     router.get('/site/conditions', GoodsController.getConditions);
