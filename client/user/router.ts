@@ -10,6 +10,8 @@ const Login = () => import('./components/pages/Login.vue');
 const Order = () => import('./components/pages/Order.vue');
 const ChatWindow = () => import('./components/pages/ChatWindow.vue');
 const SellerProfile = () => import('./components/pages/SellerProfile.vue');
+const AdminLogin = () => import('./components/pages/AdminLogin.vue');
+const AdminDashboard = () => import('./components/pages/AdminDashboard.vue');
 const AddressManage = () => import('./components/childrenPages/AddressManage.vue');
 const OrderManage = () => import('./components/childrenPages/OrderManage.vue');
 const InfoManage = () => import('./components/childrenPages/InfoManage.vue');
@@ -67,6 +69,19 @@ const router = new Router({
             name: 'register',
             path: '/site/register',
             component: Register
+        },
+        {
+            name: 'adminLogin',
+            path: '/admin/login',
+            component: AdminLogin
+        },
+        {
+            name: 'adminDashboard',
+            path: '/admin/dashboard',
+            component: AdminDashboard,
+            meta: {
+                admin: true
+            }
         },
         {
             path: '/site/chat',

@@ -90,6 +90,25 @@ const Goods = db.sequelize.define('goods', {
         field: 'status',
         comment: '状态：active-上架，inactive-下架，sold-已售出'
     },
+    audit_status: {
+        type: db.DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: 'approved',
+        field: 'audit_status',
+        comment: '审核状态：pending-待审核，approved-已通过，rejected-已拒绝'
+    },
+    audit_remark: {
+        type: db.DataTypes.STRING(200),
+        allowNull: true,
+        field: 'audit_remark',
+        comment: '审核备注'
+    },
+    admin_operated_at: {
+        type: db.DataTypes.DATE,
+        allowNull: true,
+        field: 'admin_operated_at',
+        comment: '管理员操作时间'
+    },
     views: {
         type: db.DataTypes.INTEGER,
         allowNull: false,
@@ -126,6 +145,10 @@ const Goods = db.sequelize.define('goods', {
         {
             name: 'idx_condition',
             fields: ['condition']
+        },
+        {
+            name: 'idx_audit_status',
+            fields: ['audit_status']
         }
     ]
 });

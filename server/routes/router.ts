@@ -9,6 +9,7 @@ const OrderController = require('../controller/OrderController.ts');
 const ImageController = require('../controller/ImageController.ts');
 const CommentController = require('../controller/CommentController.ts');
 const ChatController = require('../controller/ChatController.ts');
+const AdminController = require('../controller/AdminController.ts');
 
 module.exports = (app) => {
     router.get('/site/conditions', GoodsController.getConditions);
@@ -63,6 +64,16 @@ module.exports = (app) => {
     router.post('/chat/message', ChatController.sendMessage);
     router.post('/chat/session/:session_id/read', ChatController.markAsRead);
     router.get('/chat/unread', ChatController.getUnreadCount);
+    
+    router.post('/admin/check', AdminController.checkAdmin);
+    router.get('/admin/stats', AdminController.getStatistics);
+    router.get('/admin/users', AdminController.getUsers);
+    router.post('/admin/user/toggleActive', AdminController.toggleUserActive);
+    router.post('/admin/user/toggleRole', AdminController.toggleUserRole);
+    router.get('/admin/goods', AdminController.getGoods);
+    router.post('/admin/goods/audit', AdminController.auditGoods);
+    router.post('/admin/goods/takedown', AdminController.takeDownGoods);
+    router.post('/admin/goods/delete', AdminController.deleteGoods);
     
     router.get('/site/goods/:id', GoodsController.getGoodsByCategory);
     

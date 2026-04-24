@@ -1,15 +1,16 @@
-const goodsModel = require('../model/GoodsModel.ts');
-const db = require('../config/db.ts');
+var goodsModel = require('../model/GoodsModel.ts');
+var db = require('../config/db.ts');
 
-const CONDITIONS = ['全新', '99新', '95新', '轻微使用', '成色一般'];
-const TAGS = ['包邮', '可小刀', '自提', '价格面议', '支持自提', '可租可买'];
+var CONDITIONS = ['全新', '99新', '95新', '轻微使用', '成色一般'];
+var TAGS = ['包邮', '可小刀', '自提', '价格面议', '支持自提', '可租可买'];
 
 module.exports = {
-    CONDITIONS,
-    TAGS,
+    CONDITIONS: CONDITIONS,
+    TAGS: TAGS,
 
-    getAllGoods: async (options = {}) => {
-        const where = { status: 'active' };
+    getAllGoods: async function(options) {
+        if (options === undefined) options = {};
+        var where = { status: 'active', audit_status: 'approved' };
         if (options.condition) {
             where.condition = options.condition;
         }
@@ -17,48 +18,56 @@ module.exports = {
             where.category_id = options.categoryId;
         }
         if (options.minPrice !== undefined) {
-            where.goods_price = { [db.Op.gte]: options.minPrice };
+            where.goods_price = {};
+            where.goods_price[db.Op.gte] = options.minPrice;
         }
         if (options.maxPrice !== undefined) {
             if (where.goods_price) {
                 where.goods_price[db.Op.lte] = options.maxPrice;
             } else {
-                where.goods_price = { [db.Op.lte]: options.maxPrice };
+                where.goods_price = {};
+                where.goods_price[db.Op.lte] = options.maxPrice;
             }
         }
         return await goodsModel.Goods.findAll({
-            where,
+            where: where,
             order: [['created_at', 'DESC']]
         });
     },
 
-    publishGoods: async (data) => {
-        const goodsData = {
+    publishGoods: async function(data) {
+        var goodsData = {
             goods_name: data.name,
             goods_price: data.price,
             original_price: data.originalPrice || null,
             count: data.num || 1,
             goods_desc: data.desc,
-            goods_image: data.imageUrl || data.goods_images?.[0] || '',
+            goods_image: data.imageUrl || (data.goods_images && data.goods_images[0]) || '',
             goods_images: data.goods_images || [],
             category_id: data.categoryId,
             user_id: data.uid,
             condition: data.condition || '轻微使用',
             tags: data.tags || [],
             status: 'active',
+            audit_status: 'approved',
             views: 0
         };
         return await goodsModel.Goods.create(goodsData);
     },
 
-    searchGoods: async (keyword, options = {}) => {
-        const where = {
+    searchGoods: async function(keyword, options) {
+        if (options === undefined) options = {};
+        var where = {
             status: 'active',
-            [db.Op.or]: [
-                { goods_name: { [db.Op.like]: '%' + keyword + '%' } },
-                { goods_desc: { [db.Op.like]: '%' + keyword + '%' } }
-            ]
+            audit_status: 'approved'
         };
+        where[db.Op.or] = [
+            { goods_name: {} },
+            { goods_desc: {} }
+        ];
+        where[db.Op.or][0].goods_name[db.Op.like] = '%' + keyword + '%';
+        where[db.Op.or][1].goods_desc[db.Op.like] = '%' + keyword + '%';
+        
         if (options.condition) {
             where.condition = options.condition;
         }
@@ -66,24 +75,27 @@ module.exports = {
             where.category_id = options.categoryId;
         }
         if (options.minPrice !== undefined) {
-            where.goods_price = { [db.Op.gte]: options.minPrice };
+            where.goods_price = {};
+            where.goods_price[db.Op.gte] = options.minPrice;
         }
         if (options.maxPrice !== undefined) {
             if (where.goods_price) {
                 where.goods_price[db.Op.lte] = options.maxPrice;
             } else {
-                where.goods_price = { [db.Op.lte]: options.maxPrice };
+                where.goods_price = {};
+                where.goods_price[db.Op.lte] = options.maxPrice;
             }
         }
         return await goodsModel.Goods.findAll({
-            where,
+            where: where,
             order: [['created_at', 'DESC']]
         });
     },
 
-    getGoodsByPage: async (currentPage, pageSize, options = {}) => {
-        const offset = (currentPage - 1) * pageSize;
-        const where = { status: 'active' };
+    getGoodsByPage: async function(currentPage, pageSize, options) {
+        if (options === undefined) options = {};
+        var offset = (currentPage - 1) * pageSize;
+        var where = { status: 'active', audit_status: 'approved' };
         if (options.condition) {
             where.condition = options.condition;
         }
@@ -91,16 +103,17 @@ module.exports = {
             where.category_id = options.categoryId;
         }
         return await goodsModel.Goods.findAll({
-            where,
-            offset,
+            where: where,
+            offset: offset,
             limit: pageSize,
             order: [['created_at', 'DESC']]
         });
     },
 
-    getGoodsById: async (goods_id, incrementViews = true) => {
-        const goods = await goodsModel.Goods.findOne({
-            where: { goods_id }
+    getGoodsById: async function(goods_id, incrementViews) {
+        if (incrementViews === undefined) incrementViews = true;
+        var goods = await goodsModel.Goods.findOne({
+            where: { goods_id: goods_id }
         });
         if (goods && incrementViews) {
             await goods.increment('views', { by: 1 });
@@ -109,69 +122,72 @@ module.exports = {
         return goods ? [goods] : [];
     },
 
-    getCategoryById: async (categoryId, options = {}) => {
-        const where = { category_id: categoryId, status: 'active' };
+    getCategoryById: async function(categoryId, options) {
+        if (options === undefined) options = {};
+        var where = { category_id: categoryId, status: 'active', audit_status: 'approved' };
         if (options.condition) {
             where.condition = options.condition;
         }
         return await goodsModel.Goods.findAll({
-            where,
+            where: where,
             order: [['created_at', 'DESC']]
         });
     },
 
-    getRecommendGoods: async (categoryId = null, limit = 40) => {
-        const where = { status: 'active' };
+    getRecommendGoods: async function(categoryId, limit) {
+        if (categoryId === undefined) categoryId = null;
+        if (limit === undefined) limit = 40;
+        var where = { status: 'active', audit_status: 'approved' };
         if (categoryId) {
             where.category_id = categoryId;
         }
         return await goodsModel.Goods.findAll({
-            where,
-            limit,
+            where: where,
+            limit: limit,
             order: db.Sequelize.literal('RAND()')
         });
     },
 
-    updateGoodsCount: async (goods_id, count) => {
+    updateGoodsCount: async function(goods_id, count) {
         if (count) {
             return await goodsModel.Goods.update(
-                { count },
-                { where: { goods_id } }
+                { count: count },
+                { where: { goods_id: goods_id } }
             );
         } else {
             return await goodsModel.Goods.update(
                 { status: 'sold' },
-                { where: { goods_id } }
+                { where: { goods_id: goods_id } }
             );
         }
     },
 
-    getMyGoods: async (user_id, status = null) => {
-        const where = { user_id };
+    getMyGoods: async function(user_id, status) {
+        var where = { user_id: user_id };
         if (status) {
             where.status = status;
         }
         return await goodsModel.Goods.findAll({
-            where,
+            where: where,
             order: [['created_at', 'DESC']]
         });
     },
 
-    updateGoodsStatus: async (goods_id, user_id, status) => {
+    updateGoodsStatus: async function(goods_id, user_id, status) {
         return await goodsModel.Goods.update(
-            { status, updated_at: db.Sequelize.literal('CURRENT_TIMESTAMP') },
-            { where: { goods_id, user_id } }
+            { status: status, updated_at: db.Sequelize.literal('CURRENT_TIMESTAMP') },
+            { where: { goods_id: goods_id, user_id: user_id } }
         );
     },
 
-    deleteGoods: async (goods_id, user_id) => {
+    deleteGoods: async function(goods_id, user_id) {
         return await goodsModel.Goods.destroy({
-            where: { goods_id, user_id }
+            where: { goods_id: goods_id, user_id: user_id }
         });
     },
 
-    updateGoods: async (goods_id, user_id, data) => {
-        const updateData = { updated_at: db.Sequelize.literal('CURRENT_TIMESTAMP') };
+    updateGoods: async function(goods_id, user_id, data) {
+        var updateData = { updated_at: db.Sequelize.literal('CURRENT_TIMESTAMP') };
         if (data.name !== undefined) updateData.goods_name = data.name;
         if (data.price !== undefined) updateData.goods_price = data.price;
         if (data.originalPrice !== undefined) updateData.original_price = data.originalPrice;
@@ -188,25 +204,26 @@ module.exports = {
         }
         return await goodsModel.Goods.update(
             updateData,
-            { where: { goods_id, user_id } }
+            { where: { goods_id: goods_id, user_id: user_id } }
         );
     },
 
-    getGoodsByCondition: async (condition) => {
+    getGoodsByCondition: async function(condition) {
         return await goodsModel.Goods.findAll({
-            where: { condition, status: 'active' },
+            where: { condition: condition, status: 'active', audit_status: 'approved' },
             order: [['created_at', 'DESC']]
         });
     },
 
-    getGoodsCount: async (options = {}) => {
-        const where = { status: 'active' };
+    getGoodsCount: async function(options) {
+        if (options === undefined) options = {};
+        var where = { status: 'active', audit_status: 'approved' };
         if (options.condition) {
             where.condition = options.condition;
         }
         if (options.categoryId) {
             where.category_id = options.categoryId;
         }
-        return await goodsModel.Goods.count({ where });
+        return await goodsModel.Goods.count({ where: where });
     }
 };
