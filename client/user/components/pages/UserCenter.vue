@@ -14,6 +14,7 @@
                                     个人中心 <i class="el-icon-arrow-down el-icon--right"></i>
                                 </span>
                                 <el-dropdown-menu slot="dropdown">
+                                    <el-dropdown-item command="7">消息</el-dropdown-item>
                                     <el-dropdown-item command="0">地址管理</el-dropdown-item>
                                     <el-dropdown-item command="1">订单管理</el-dropdown-item>
                                     <el-dropdown-item command="2">我的发布</el-dropdown-item>

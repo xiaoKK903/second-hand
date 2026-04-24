@@ -8,12 +8,14 @@ const Cart = () => import('./components/pages/Cart.vue');
 const UserCenter = () => import('./components/pages/UserCenter.vue');
 const Login = () => import('./components/pages/Login.vue');
 const Order = () => import('./components/pages/Order.vue');
+const ChatWindow = () => import('./components/pages/ChatWindow.vue');
 const AddressManage = () => import('./components/childrenPages/AddressManage.vue');
 const OrderManage = () => import('./components/childrenPages/OrderManage.vue');
 const InfoManage = () => import('./components/childrenPages/InfoManage.vue');
 const FeedbackManage = () => import('./components/childrenPages/FeedbackManage.vue');
 const PublisherOrder = () => import('./components/childrenPages/PublisherOrder.vue');
 const MyGoods = () => import('./components/childrenPages/MyGoods.vue');
+const ChatList = () => import('./components/childrenPages/ChatList.vue');
 const Register = () => import('./components/pages/Register.vue');
 Vue.use(Router);
 
@@ -62,6 +64,13 @@ const router = new Router({
             component: Register
         },
         {
+            path: '/site/chat',
+            component: ChatWindow,
+            meta: {
+                auth: true
+            }
+        },
+        {
             path: '/site/userCenter',
             component: UserCenter,
             meta: {
@@ -94,6 +103,11 @@ const router = new Router({
                     path: '/userCenter/myGoods',
                     component: MyGoods,
                     name: 'myGoods'
+                },
+                {
+                    path: '/userCenter/chatList',
+                    component: ChatList,
+                    name: 'chatList'
                 }
             ]
         },
