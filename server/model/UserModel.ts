@@ -42,6 +42,20 @@ var User = db.sequelize.define('user', {
         field: 'contact',
         comment: '联系方式（微信、QQ等）'
     },
+    role: {
+        type: db.DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: 'user',
+        field: 'role',
+        comment: '用户角色：user-普通用户，admin-管理员'
+    },
+    is_active: {
+        type: db.DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        field: 'is_active',
+        comment: '账号是否激活：true-正常，false-禁用'
+    },
     created_at: {
         type: db.DataTypes.DATE,
         allowNull: false,
