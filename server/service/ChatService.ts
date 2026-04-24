@@ -1,8 +1,8 @@
-const db = require('../config/db.ts');
-const { ChatSession } = require('../model/ChatSessionModel.ts');
-const { ChatMessage } = require('../model/ChatMessageModel.ts');
-const { User } = require('../model/UserModel.ts');
-const { Op } = db;
+var db = require('../config/db.ts');
+var chatSessionModel = require('../model/ChatSessionModel.ts');
+var chatMessageModel = require('../model/ChatMessageModel.ts');
+var userModel = require('../model/UserModel.ts');
+var Op = db.Op;
 
 var ChatService = {
     getOrCreateSession: async function(user1_id, user2_id) {
@@ -13,7 +13,9 @@ var ChatService = {
         var minUserId = Math.min(user1_id, user2_id);
         var maxUserId = Math.max(user1_id, user2_id);
         
-        var session = await ChatSession.findOne({
+        console.log('Looking for session between:', minUserId, maxUserId);
+        
+        var session = await chatSessionModel.ChatSession.findOne({
             where: {
                 user1_id: minUserId,
                 user2_id: maxUserId
@@ -21,10 +23,12 @@ var ChatService = {
         });
         
         if (session) {
+            console.log('Found existing session:', session.session_id);
             return session;
         }
         
-        session = await ChatSession.create({
+        console.log('Creating new session...');
+        session = await chatSessionModel.ChatSession.create({
             user1_id: minUserId,
             user2_id: maxUserId,
             last_message: '',
@@ -33,11 +37,12 @@ var ChatService = {
             user2_unread: 0
         });
         
+        console.log('New session created:', session.session_id);
         return session;
     },
     
     getUserSessions: async function(user_id) {
-        var sessions = await ChatSession.findAll({
+        var sessions = await chatSessionModel.ChatSession.findAll({
             where: {
                 [Op.or]: [
                     { user1_id: user_id },
@@ -53,7 +58,7 @@ var ChatService = {
             var otherUserId = session.user1_id === user_id ? session.user2_id : session.user1_id;
             var unreadCount = session.user1_id === user_id ? session.user1_unread : session.user2_unread;
             
-            var otherUser = await User.findOne({
+            var otherUser = await userModel.User.findOne({
                 where: { user_id: otherUserId },
                 attributes: ['user_id', 'phone_num']
             });
@@ -78,7 +83,7 @@ var ChatService = {
     getSessionMessages: async function(session_id, user_id, limit) {
         limit = limit || 50;
         
-        var messages = await ChatMessage.findAll({
+        var messages = await chatMessageModel.ChatMessage.findAll({
             where: {
                 session_id: session_id
             },
@@ -92,17 +97,33 @@ var ChatService = {
     sendMessage: async function(session_id, sender_id, receiver_id, content, msg_type, goods_id) {
         msg_type = msg_type || 'text';
         
-        var message = await ChatMessage.create({
+        console.log('Creating message:', {
+            session_id,
+            sender_id,
+            receiver_id,
+            content,
+            msg_type,
+            goods_id
+        });
+        
+        var messageData = {
             session_id: session_id,
             sender_id: sender_id,
             receiver_id: receiver_id,
             content: content,
             msg_type: msg_type,
-            goods_id: goods_id || null,
             is_read: false
-        });
+        };
         
-        var session = await ChatSession.findOne({
+        if (goods_id) {
+            messageData.goods_id = goods_id;
+        }
+        
+        var message = await chatMessageModel.ChatMessage.create(messageData);
+        
+        console.log('Message created:', message.message_id);
+        
+        var session = await chatSessionModel.ChatSession.findOne({
             where: { session_id: session_id }
         });
         
@@ -127,7 +148,8 @@ var ChatService = {
                 updateData.user1_unread = (session.user1_unread || 0) + 1;
             }
             
-            await ChatSession.update(updateData, {
+            console.log('Updating session:', updateData);
+            await chatSessionModel.ChatSession.update(updateData, {
                 where: { session_id: session_id }
             });
         }
@@ -136,7 +158,7 @@ var ChatService = {
     },
     
     markSessionAsRead: async function(session_id, user_id) {
-        var session = await ChatSession.findOne({
+        var session = await chatSessionModel.ChatSession.findOne({
             where: { session_id: session_id }
         });
         
@@ -151,11 +173,11 @@ var ChatService = {
             updateData.user2_unread = 0;
         }
         
-        await ChatSession.update(updateData, {
+        await chatSessionModel.ChatSession.update(updateData, {
             where: { session_id: session_id }
         });
         
-        var result = await ChatMessage.update(
+        var result = await chatMessageModel.ChatMessage.update(
             { is_read: true },
             {
                 where: {
@@ -170,7 +192,7 @@ var ChatService = {
     },
     
     getTotalUnreadCount: async function(user_id) {
-        var sessions = await ChatSession.findAll({
+        var sessions = await chatSessionModel.ChatSession.findAll({
             where: {
                 [Op.or]: [
                     { user1_id: user_id },
@@ -193,7 +215,7 @@ var ChatService = {
     },
     
     getSessionById: async function(session_id) {
-        return await ChatSession.findOne({
+        return await chatSessionModel.ChatSession.findOne({
             where: { session_id: session_id }
         });
     }
