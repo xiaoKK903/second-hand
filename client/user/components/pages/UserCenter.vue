@@ -170,7 +170,6 @@ export default {
                 that.$message.success('已退出登录');
                 that.$router.push({ name: 'login' });
             }).catch(function() {
-                // 取消
             });
         }
     }
@@ -183,113 +182,109 @@ export default {
         background-color #f5f5f5
         padding 20px
 
-        .center-content
-            max-width 800px
-            margin 0 auto
+    .center-content
+        max-width 800px
+        margin 0 auto
 
-        .content-wrapper
-            background #fff
-            border-radius 12px
-            overflow hidden
+    .content-wrapper
+        background #fff
+        border-radius 12px
+        overflow hidden
 
-            .user-header
-                background linear-gradient(135deg, #667eea 0%, #764ba2 100%)
-                padding 30px
-                color #fff
+    .user-header
+        background linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+        padding 30px
+        color #fff
 
-                .user-info
-                    display flex
-                    align-items center
-                    gap 20px
+    .user-info
+        display flex
+        align-items center
 
-                    .user-avatar
-                        width 80px
-                        height 80px
-                        border-radius 50%
-                        border 3px solid rgba(255,255,255,0.3)
-                        overflow hidden
-                        background #fff
+    .user-avatar
+        width 80px
+        height 80px
+        border-radius 50%
+        border 3px solid rgba(255,255,255,0.3)
+        overflow hidden
+        background #fff
+        margin-right 20px
 
-                        img
-                            width 100%
-                            height 100%
-                            object-fit cover
+        img
+            width 100%
+            height 100%
+            object-fit cover
 
-                    .user-detail
-                        .user-name
-                            font-size 20px
-                            font-weight 600
-                            margin-bottom 8px
+    .user-name
+        font-size 20px
+        font-weight 600
+        margin-bottom 8px
 
-                        .user-bio
-                            font-size 14px
-                            opacity 0.8
+    .user-bio
+        font-size 14px
+        opacity 0.8
 
-        .content-area
-            padding 20px
+    .content-area
+        padding 20px
 
-            .menu-section
-                margin-bottom 30px
+    .menu-section
+        margin-bottom 30px
 
-                .menu-title
-                    font-size 14px
-                    font-weight 600
-                    color #666
-                    margin-bottom 15px
-                    padding-left 5px
-                    border-left 3px solid #667eea
+    .menu-title
+        font-size 14px
+        font-weight 600
+        color #666
+        margin-bottom 15px
+        padding-left 5px
+        border-left 3px solid #667eea
 
-                .menu-grid
-                    display grid
-                    grid-template-columns repeat(4, 1fr)
-                    gap 15px
+    .menu-grid
+        margin-left -15px
 
-                    @media (max-width 600px)
-                        grid-template-columns repeat(2, 1fr)
+    .menu-item
+        display inline-flex
+        flex-direction column
+        align-items center
+        justify-content center
+        width calc(25% - 15px)
+        margin-left 15px
+        margin-bottom 15px
+        padding 20px 10px
+        background #f8f9fa
+        border-radius 12px
+        cursor pointer
+        transition all 0.3s ease
 
-                    .menu-item
-                        display flex
-                        flex-direction column
-                        align-items center
-                        justify-content center
-                        padding 20px 10px
-                        background #f8f9fa
-                        border-radius 12px
-                        cursor pointer
-                        transition all 0.3s ease
+        &:hover
+            background #eef2ff
+            transform translateY(-2px)
+            box-shadow 0 4px 12px rgba(102, 126, 234, 0.15)
 
-                        &:hover
-                            background #eef2ff
-                            transform translateY(-2px)
-                            box-shadow 0 4px 12px rgba(102, 126, 234, 0.15)
+    .menu-icon
+        width 48px
+        height 48px
+        background linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+        border-radius 12px
+        display flex
+        align-items center
+        justify-content center
+        margin-bottom 10px
 
-                        .menu-icon
-                            width 48px
-                            height 48px
-                            background linear-gradient(135deg, #667eea 0%, #764ba2 100%)
-                            border-radius 12px
-                            display flex
-                            align-items center
-                            justify-content center
-                            margin-bottom 10px
+        i
+            font-size 24px
+            color #fff
 
-                            i
-                                font-size 24px
-                                color #fff
+    .menu-text
+        font-size 13px
+        color #333
+        font-weight 500
 
-                        .menu-text
-                            font-size 13px
-                            color #333
-                            font-weight 500
+    .logout-item .menu-icon
+        background linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%)
 
-                    .logout-item
-                        .menu-icon
-                            background linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%)
-
-            .router-view-area
-                margin-top 20px
-                padding-top 20px
-                border-top 1px dashed #e8e8e8
+    .router-view-area
+        margin-top 20px
+        padding-top 20px
+        border-top 1px dashed #e8e8e8
 
     .login-prompt
         display flex
@@ -301,12 +296,12 @@ export default {
         border-radius 8px
         padding 40px
 
-        .prompt-icon
-            font-size 64px
-            margin-bottom 20px
+    .prompt-icon
+        font-size 64px
+        margin-bottom 20px
 
-        .prompt-text
-            font-size 16px
-            color #999
-            margin-bottom 24px
+    .prompt-text
+        font-size 16px
+        color #999
+        margin-bottom 24px
 </style>

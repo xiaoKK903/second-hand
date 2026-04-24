@@ -8,6 +8,8 @@
     "build": "cross-env NODE_ENV=production webpack --config webpack.prod.js --mode production",
     "dev": "webpack-dev-server --config webpack.dev.js --mode development --open chrome",
     "dev-server": "node server/app.ts",
+    "server": "nodemon server/app.ts",
+    "server:watch": "nodemon --watch server --ext ts,js,json server/app.ts",
     "prod": "pm2 start app.ts --port 3000"
   },
   "jest": {
@@ -47,6 +49,7 @@
     "file-loader": "^6.0.0",
     "html-webpack-plugin": "^4.2.0",
     "jest": "^26.0.0",
+    "nodemon": "^3.1.14",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "style-loader": "^1.1.4",
     "stylus": "^0.54.7",
