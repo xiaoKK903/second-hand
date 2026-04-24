@@ -9,6 +9,7 @@ const UserCenter = () => import('./components/pages/UserCenter.vue');
 const Login = () => import('./components/pages/Login.vue');
 const Order = () => import('./components/pages/Order.vue');
 const ChatWindow = () => import('./components/pages/ChatWindow.vue');
+const SellerProfile = () => import('./components/pages/SellerProfile.vue');
 const AddressManage = () => import('./components/childrenPages/AddressManage.vue');
 const OrderManage = () => import('./components/childrenPages/OrderManage.vue');
 const InfoManage = () => import('./components/childrenPages/InfoManage.vue');
@@ -48,6 +49,10 @@ const router = new Router({
         {
             path: '/site/goodsDetail',
             component: GoodsDetail
+        },
+        {
+            path: '/site/seller',
+            component: SellerProfile
         },
         {
             path: '/site/cart',

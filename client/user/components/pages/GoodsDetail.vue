@@ -518,10 +518,17 @@ export default {
             });
         },
         goToSeller() {
-            this.$message({
-                message: '卖家主页功能开发中',
-                type: 'info'
-            });
+            if (this.goods && this.goods.user_id) {
+                this.$router.push({ 
+                    path: '/site/seller', 
+                    query: { user_id: this.goods.user_id } 
+                });
+            } else {
+                this.$message({
+                    message: '无法获取卖家信息',
+                    type: 'warning'
+                });
+            }
         },
         chatWithSeller: function() {
             var uid = this.$cookieStore.getCookie('sid');

@@ -1,78 +1,199 @@
-const UserService = require('../service/UserService.ts');
-const tools = require('../config/tools.ts');
+var UserService = require('../service/UserService.ts');
+var tools = require('../config/tools.ts');
 
 module.exports = {
-    // 用户登录
-    doLogin: async (ctx, next) => {
+    doLogin: async function(ctx, next) {
         await next();
-        let phone = ctx.request.body.phone,
-            password = ctx.request.body.password;
-        let data = await UserService.getUserByPhone(phone);
-        if(data.length) {   // 账号存在
-            let user = data[0].dataValues;
-            if(user.phone_num === phone && tools.debcrypt(password, user.password)) {
-                let sid = ctx.cookies.get('sid');   // 获取sid
-                if(ctx.cookies.get('sid')) {
-                    // 如果存在sid
+        var phone = ctx.request.body.phone;
+        var password = ctx.request.body.password;
+        var data = await UserService.getUserByPhone(phone);
+        if (data.length) {
+            var user = data[0].dataValues;
+            if (user.phone_num === phone && tools.debcrypt(password, user.password)) {
+                var sid = ctx.cookies.get('sid');
+                if (ctx.cookies.get('sid')) {
                 } else {
-                    ctx.session.sid = user.user_id;  // 设置session
+                    ctx.session.sid = user.user_id;
                     ctx.cookies.set('sid', ctx.session.sid, {
                         domain: 'localhost',
-                        path: '/',  // [注意]写入cookie中，path路径如果写的话，cookie写入是完全成功的，但是只有在写入路径下才能访问到cookie。
-                        maxAge: 86400000,   // 失效时间，单位是ms(node里面都是毫秒)
-                        overwrite: false,   // 能否被覆盖，默认true
-                        httpOnly: false  // 允许客户端修改cookie，默认为true
+                        path: '/',
+                        maxAge: 86400000,
+                        overwrite: false,
+                        httpOnly: false
                     });
                     sid = ctx.session.sid;
                 }
                 ctx.response.type = 'charset=utf-8';
-                ctx.response.body = { success: true, msg: '登录成功！', sid: sid };
+                
+                var nickname = user.nickname;
+                if (!nickname && user.phone_num) {
+                    var phoneNum = user.phone_num;
+                    if (phoneNum.length === 11) {
+                        nickname = phoneNum.substring(0, 3) + '****' + phoneNum.substring(7);
+                    } else {
+                        nickname = phoneNum;
+                    }
+                }
+                
+                ctx.response.body = {
+                    success: true,
+                    msg: '登录成功！',
+                    sid: sid,
+                    user: {
+                        user_id: user.user_id,
+                        phone_num: user.phone_num,
+                        nickname: nickname,
+                        avatar: user.avatar,
+                        bio: user.bio,
+                        contact: user.contact
+                    }
+                };
             } else {
                 ctx.response.type = 'charset=utf-8';
                 ctx.response.body = { success: false, msg: '账号或密码错误！' };
             }
-        } else {   // 账号不存在
+        } else {
             ctx.response.type = 'charset=utf-8';
             ctx.response.body = { success: false, msg: '账号不存在！' };
         }
     },
-    // 用户注册
-    doRegister: async (ctx, next) => {
+    
+    doRegister: async function(ctx, next) {
         await next();
-        let phone = ctx.request.body.phone,
-            password = ctx.request.body.password;
-        let data = await UserService.getUserByPhone(phone);
-        if(data.length) {  // 存在用户
+        var phone = ctx.request.body.phone;
+        var password = ctx.request.body.password;
+        var data = await UserService.getUserByPhone(phone);
+        if (data.length) {
             ctx.response.type = 'charset=utf-8';
             ctx.response.body = { success: false, msg: '该账号已存在！' };
-        } else {  // 不存在用户
-            let ret = await UserService.insertUser(phone, tools.enbcrypt(password));
+        } else {
+            var ret = await UserService.insertUser(phone, tools.enbcrypt(password));
             ctx.response.type = 'charset=utf-8';
             ctx.response.body = { success: true, msg: '注册成功！', data: ret };
         }
     },
-    // 获取用户信息
-    getUserById: async (ctx, next) => {
+    
+    getUserById: async function(ctx, next) {
         await next();
-        let uid = ctx.params.uid;
-        let data = await UserService.findUser(uid);
-        ctx.response.type = 'utf-8';
-        ctx.response.body = data;
-    },
-    // 修改密码
-    updatePass: async (ctx, next) => {
-        await next();
-        let uid = ctx.request.body.uid,
-            form = ctx.request.body.form;
-        let data = await UserService.findUser(uid);
-        let user = data[0].dataValues;
-        if(tools.debcrypt(form.pass, user.password)) {
-            let data = await UserService.updatePass(uid, tools.enbcrypt(form.checkPass));
+        var uid = ctx.params.uid;
+        var data = await UserService.findUser(uid);
+        
+        if (data && data.length > 0) {
+            var user = data[0].dataValues;
+            var nickname = user.nickname;
+            if (!nickname && user.phone_num) {
+                var phone = user.phone_num;
+                if (phone.length === 11) {
+                    nickname = phone.substring(0, 3) + '****' + phone.substring(7);
+                } else {
+                    nickname = phone;
+                }
+            }
+            
             ctx.response.type = 'utf-8';
-            ctx.response.body = data;
+            ctx.response.body = {
+                success: true,
+                data: {
+                    user_id: user.user_id,
+                    phone_num: user.phone_num,
+                    nickname: nickname,
+                    avatar: user.avatar,
+                    bio: user.bio,
+                    contact: user.contact
+                }
+            };
+        } else {
+            ctx.response.type = 'utf-8';
+            ctx.response.body = { success: false, msg: '用户不存在' };
+        }
+    },
+    
+    updatePass: async function(ctx, next) {
+        await next();
+        var uid = ctx.request.body.uid;
+        var form = ctx.request.body.form;
+        var data = await UserService.findUser(uid);
+        var user = data[0].dataValues;
+        if (tools.debcrypt(form.pass, user.password)) {
+            var result = await UserService.updatePass(uid, tools.enbcrypt(form.checkPass));
+            ctx.response.type = 'utf-8';
+            ctx.response.body = result;
         } else {
             ctx.response.type = 'utf-8';
             ctx.response.body = 201;
         }
+    },
+    
+    updateProfile: async function(ctx, next) {
+        await next();
+        try {
+            var uid = ctx.request.body.uid;
+            if (!uid) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '请先登录' };
+                return;
+            }
+            
+            var updateData = {};
+            if (ctx.request.body.nickname !== undefined) {
+                updateData.nickname = ctx.request.body.nickname;
+            }
+            if (ctx.request.body.avatar !== undefined) {
+                updateData.avatar = ctx.request.body.avatar;
+            }
+            if (ctx.request.body.bio !== undefined) {
+                updateData.bio = ctx.request.body.bio;
+            }
+            if (ctx.request.body.contact !== undefined) {
+                updateData.contact = ctx.request.body.contact;
+            }
+            
+            console.log('updateProfile called:', { uid: uid, data: updateData });
+            
+            var result = await UserService.updateProfile(uid, updateData);
+            
+            console.log('updateProfile result:', result);
+            
+            ctx.response.type = 'application/json';
+            ctx.response.body = {
+                success: result[0] > 0,
+                msg: result[0] > 0 ? '更新成功' : '更新失败或无变化',
+                affected: result[0]
+            };
+        } catch (e) {
+            console.error('updateProfile error:', e);
+            ctx.response.type = 'application/json';
+            ctx.response.body = { success: false, msg: '服务器错误: ' + e.message };
+        }
+    },
+    
+    getSellerProfile: async function(ctx, next) {
+        await next();
+        try {
+            var userId = ctx.params.user_id;
+            if (!userId) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '缺少用户ID' };
+                return;
+            }
+            
+            var profile = await UserService.getSellerProfile(userId);
+            
+            if (!profile) {
+                ctx.response.type = 'application/json';
+                ctx.response.body = { success: false, msg: '用户不存在' };
+                return;
+            }
+            
+            ctx.response.type = 'application/json';
+            ctx.response.body = {
+                success: true,
+                data: profile
+            };
+        } catch (e) {
+            console.error('getSellerProfile error:', e);
+            ctx.response.type = 'application/json';
+            ctx.response.body = { success: false, msg: '服务器错误' };
+        }
     }
-}
+};
