@@ -61,8 +61,8 @@ module.exports = (app) => {
     router.post('/chat/session/:session_id/read', ChatController.markAsRead);
     router.get('/chat/unread', ChatController.getUnreadCount);
     
-    router.post('/api/user/profile', UserController.updateProfile);
-    router.get('/api/seller/:user_id', UserController.getSellerProfile);
+    router.post('/site/user/profile', UserController.updateProfile);
+    router.get('/site/seller/:user_id', UserController.getSellerProfile);
     
     app.use(router.routes()).use(router.allowedMethods());
 };
