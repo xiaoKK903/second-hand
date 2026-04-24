@@ -157,7 +157,7 @@ export default {
             var that = this;
             this.loading = true;
             
-            this.axios.get('/api/seller/' + this.sellerId).then(function(res) {
+            this.axios.get('/site/seller/' + this.sellerId).then(function(res) {
                 if (res.data && res.data.success && res.data.data) {
                     that.sellerProfile = res.data.data;
                     that.goodsList = res.data.data.recent_goods || [];

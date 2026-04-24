@@ -188,6 +188,11 @@ export default {
         }
     },
     created() {
+        if (this.$route.query && this.$route.query.tab === 'password') {
+            this.activeTab = 'password';
+        } else {
+            this.activeTab = 'profile';
+        }
         this.loadUserInfo();
     },
     methods: {
@@ -279,7 +284,7 @@ export default {
             
             console.log('Saving profile:', updateData);
             
-            this.axios.post('/api/user/profile', updateData).then(function(res) {
+            this.axios.post('/site/user/profile', updateData).then(function(res) {
                 console.log('Save profile response:', res.data);
                 that.saving = false;
                 if (res.data && res.data.success) {
