@@ -1,7 +1,7 @@
 <template>
     <div class="goods-card" @click="goodsDetail">
-        <div class="img-wrapper">
-            <img :src="imgUrl" :alt="name" @error="handleImgError">
+        <div class="img-wrapper" v-if="imgUrl">
+            <img :src="imgUrl" :alt="name">
             <div class="card-badges" v-if="condition || showTags">
                 <span class="badge condition-badge" v-if="condition">
                     <span class="badge-icon">{{ getConditionIcon(condition) }}</span>
@@ -14,6 +14,21 @@
             <div class="image-count" v-if="imagesCount > 1">
                 <i class="el-icon-picture"></i>
                 {{ imagesCount }}
+            </div>
+        </div>
+        <div class="img-wrapper" v-else>
+            <div class="no-image-placeholder">
+                <i class="el-icon-picture"></i>
+                <span>暂无图片</span>
+            </div>
+            <div class="card-badges" v-if="condition || showTags">
+                <span class="badge condition-badge" v-if="condition">
+                    <span class="badge-icon">{{ getConditionIcon(condition) }}</span>
+                    {{ condition }}
+                </span>
+                <span class="badge tag-badge" v-for="tag in displayTags" :key="tag" :class="'tag-' + getTagClass(tag)">
+                    {{ tag }}
+                </span>
             </div>
         </div>
         <div class="goods-content">
@@ -46,9 +61,7 @@
 export default {
     name: 'GoodsCard',
     data() {
-        return {
-            defaultImg: '/static/img/goods.webp'
-        }
+        return {}
     },
     props: {
         price: {
@@ -146,9 +159,6 @@ export default {
         },
         goodsDetail() {
             this.$router.push({ path: '/site/goodsDetail?id=' + this.id });
-        },
-        handleImgError(e) {
-            e.target.src = this.defaultImg;
         }
     }
 }
@@ -181,6 +191,22 @@ export default {
             height 100%
             object-fit cover
             transition transform 0.5s ease
+            
+    .no-image-placeholder
+        width 100%
+        height 100%
+        display flex
+        flex-direction column
+        align-items center
+        justify-content center
+        color #ccc
+
+        i
+            font-size 36px
+            margin-bottom 8px
+
+        span
+            font-size 12px
             
     .goods-card:hover .img-wrapper >img
         transform scale(1.08)

@@ -408,28 +408,28 @@ export default {
             imageUrls = existingUrls;
             
             if (newFiles.length === 0) {
-                if (imageUrls.length === 0) {
-                    imageUrls = [this.getDefaultImageUrl(0)];
-                }
                 return Promise.resolve(imageUrls);
             }
             
             var promises = newFiles.map(function(file, index) {
                 return new Promise(function(resolve) {
-                    resolve(that.getDefaultImageUrl(index));
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        resolve(e.target.result);
+                    };
+                    reader.onerror = function() {
+                        resolve('');
+                    };
+                    reader.readAsDataURL(file.raw);
                 });
             });
             
             return Promise.all(promises).then(function(urls) {
-                return imageUrls.concat(urls);
+                var validUrls = urls.filter(function(url) {
+                    return url && url !== '';
+                });
+                return imageUrls.concat(validUrls);
             });
-        },
-        getDefaultImageUrl: function(index) {
-            var images = [
-                '/static/img/goods.webp',
-                '/static/img/timg.jpg'
-            ];
-            return images[index % images.length];
         },
         submitPublish: function() {
             var that = this;

@@ -5,15 +5,13 @@
                 <div class="gallery-wrapper" v-if="images.length > 0">
                     <div class="gallery-main">
                         <div class="gallery-container" ref="galleryContainer">
-                            <div 
-                                class="gallery-item"
+                            <div class="gallery-item"
                                 v-for="(image, index) in images"
                                 :key="index"
                                 :style="{ transform: 'translateX(' + (currentImageIndex * -100) + '%)' }">
                                 <img 
                                     :src="image" 
-                                    @click="openImagePreview(currentImageIndex)"
-                                    @error="handleImageError($event)">
+                                    @click="openImagePreview(currentImageIndex)">
                             </div>
                         </div>
                         
@@ -56,13 +54,15 @@
                             v-for="(image, index) in images"
                             :key="index"
                             @click="currentImageIndex = index">
-                            <img :src="image" @error="handleImageError($event)">
+                            <img :src="image">
                         </div>
                     </div>
                 </div>
                 
                 <div class="gallery-placeholder" v-else>
-                    <img :src="defaultImage" @error="handleImageError($event)">
+                    <div class="placeholder-icon">
+                        <i class="el-icon-picture"></i>
+                    </div>
                     <p class="placeholder-text">暂无商品图片</p>
                 </div>
             </div>
@@ -292,7 +292,6 @@ export default {
             replyTarget: null,
             submitting: false,
             goodsTags: [],
-            defaultImage: '/static/img/goods.webp',
             defaultAvatar: '/static/img/logo.png',
             placeholderAvatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIGZpbGw9IiNlNWU3ZWIiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjI0IiByPSIxMiIgZmlsbD0iIzk5YTFhZiIvPjxyZWN0IHg9IjEyIiB5PSI0MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjE4IiByeD0iOSIgZmlsbD0iIzk5YTFhZiIvPjwvc3ZnPg==',
             touchStartX: 0,
@@ -356,9 +355,6 @@ export default {
             var discount = (this.goods.goods_price / this.goods.original_price * 10).toFixed(1);
             return discount;
         },
-        handleImageError(event) {
-            event.target.src = this.defaultImage;
-        },
         handleAvatarError(event) {
             var target = event.target;
             if (target.dataset.errored) return;
@@ -404,10 +400,6 @@ export default {
                 
                 if (that.images.length === 0 && that.goods.goods_image) {
                     that.images = [that.goods.goods_image];
-                }
-                
-                if (that.images.length === 0) {
-                    that.images = [that.defaultImage];
                 }
                 
                 if (that.goods.tags) {
@@ -874,18 +866,20 @@ export default {
     justify-content center
     position relative
 
-    img
+    .placeholder-icon
         position absolute
-        top 50%
+        top 40%
         left 50%
         transform translate(-50%, -50%)
-        width 60%
-        height auto
-        opacity 0.6
+        font-size 64px
+        color #ccc
+
+        i
+            font-size 64px
 
     .placeholder-text
         position absolute
-        bottom 20%
+        bottom 25%
         left 50%
         transform translateX(-50%)
         font-size 14px
