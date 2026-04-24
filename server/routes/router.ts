@@ -8,6 +8,7 @@ const FeedbackController = require('../controller/FeedbackController.ts');
 const OrderController = require('../controller/OrderController.ts');
 const ImageController = require('../controller/ImageController.ts');
 const CommentController = require('../controller/CommentController.ts');
+const ChatController = require('../controller/ChatController.ts');
 
 module.exports = (app) => {
     router.get('/site/conditions', GoodsController.getConditions);
@@ -52,6 +53,13 @@ module.exports = (app) => {
     router.post('/goods/:id/comment', CommentController.addComment);
     router.delete('/comments/:comment_id', CommentController.deleteComment);
     router.get('/goods/:id/comments/count', CommentController.getCommentsCount);
+    
+    router.post('/chat/session', ChatController.getOrCreateSession);
+    router.get('/chat/sessions', ChatController.getUserSessions);
+    router.get('/chat/session/:session_id/messages', ChatController.getSessionMessages);
+    router.post('/chat/message', ChatController.sendMessage);
+    router.post('/chat/session/:session_id/read', ChatController.markAsRead);
+    router.get('/chat/unread', ChatController.getUnreadCount);
     
     app.use(router.routes()).use(router.allowedMethods());
 };

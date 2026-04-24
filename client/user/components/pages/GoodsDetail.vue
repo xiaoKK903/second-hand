@@ -112,22 +112,29 @@
                     </div>
                 </div>
 
-                <div class="seller-card" @click="goToSeller">
-                    <div class="seller-avatar">
-                        <img :src="sellerInfo.avatar || defaultAvatar" @error="handleAvatarError($event)">
-                    </div>
-                    <div class="seller-info-box">
-                        <div class="seller-name">
-                            {{ sellerInfo.nickname || sellerInfo.username || '卖家' }}
-                            <el-tag v-if="sellerInfo.verified" type="success" size="mini">已认证</el-tag>
+                <div class="seller-card">
+                    <div class="seller-left" @click="goToSeller">
+                        <div class="seller-avatar">
+                            <img :src="sellerInfo.avatar || defaultAvatar" @error="handleAvatarError($event)">
                         </div>
-                        <div class="seller-stats">
-                            <span>在售 {{ sellerInfo.goodsCount || 0 }} 件</span>
-                            <span class="divider">|</span>
-                            <span>粉丝 {{ sellerInfo.fans || 0 }}</span>
+                        <div class="seller-info-box">
+                            <div class="seller-name">
+                                {{ sellerInfo.nickname || sellerInfo.username || '卖家' }}
+                                <el-tag v-if="sellerInfo.verified" type="success" size="mini">已认证</el-tag>
+                            </div>
+                            <div class="seller-stats">
+                                <span>在售 {{ sellerInfo.goodsCount || 0 }} 件</span>
+                                <span class="divider">|</span>
+                                <span>粉丝 {{ sellerInfo.fans || 0 }}</span>
+                            </div>
                         </div>
                     </div>
-                    <i class="el-icon-arrow-right arrow-icon"></i>
+                    <div class="seller-actions">
+                        <el-button type="primary" size="small" @click="chatWithSeller" class="chat-btn">
+                            <i class="el-icon-chat-dot-round"></i>
+                            私聊
+                        </el-button>
+                    </div>
                 </div>
 
                 <div class="desc-section" v-if="goods.goods_desc">
@@ -514,6 +521,45 @@ export default {
             this.$message({
                 message: '卖家主页功能开发中',
                 type: 'info'
+            });
+        },
+        chatWithSeller: function() {
+            var uid = this.$cookieStore.getCookie('sid');
+            if (!uid) {
+                var that = this;
+                this.$confirm('您还未登录, 是否去登录?', '提示', {
+                    confirmButtonText: '确定',
+                    type: 'warning'
+                }).then(function() {
+                    that.$router.push({ name: 'login' });
+                }).catch(function() {});
+                return;
+            }
+            
+            var sellerId = this.goods.user_id;
+            if (!sellerId) {
+                this.$message.warning('无法获取卖家信息');
+                return;
+            }
+            
+            if (Number(uid) === Number(sellerId)) {
+                this.$message.warning('不能与自己聊天');
+                return;
+            }
+            
+            var sellerName = this.sellerInfo.nickname || this.sellerInfo.username || '卖家';
+            
+            this.$router.push({ 
+                path: '/site/chat', 
+                query: { 
+                    target_user_id: sellerId,
+                    target_name: sellerName,
+                    goods_id: this.goods.goods_id,
+                    goods_name: this.goods.goods_name,
+                    goods_price: this.goods.goods_price,
+                    goods_image: this.goods.goods_image,
+                    from: 'detail'
+                } 
             });
         },
         scrollToComments() {
@@ -1023,18 +1069,21 @@ export default {
 .seller-card
     display flex
     align-items center
+    justify-content space-between
     background #fafafa
     border-radius 12px
     padding 16px
     margin-bottom 16px
+    transition all 0.3s
+
+.seller-left
+    display flex
+    align-items center
     cursor pointer
     transition all 0.3s
 
     &:hover
-        background #f5f5f5
-
-        .arrow-icon
-            transform translateX(4px)
+        opacity 0.8
 
 .seller-avatar
     width 48px
@@ -1072,6 +1121,19 @@ export default {
 
     .divider
         color #ddd
+
+.seller-actions
+    flex-shrink 0
+    margin-left 16px
+
+.chat-btn
+    background linear-gradient(135deg, #ff6b35, #ff4d4f)
+    border none
+    border-radius 20px
+    padding 8px 20px
+
+    &:hover
+        background linear-gradient(135deg, #ff5a1f, #ff3a3a)
 
 .arrow-icon
     color #ccc
