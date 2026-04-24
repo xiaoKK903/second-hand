@@ -38,11 +38,11 @@ var Goods = db.sequelize.define('goods', {
         type: db.DataTypes.TEXT,
         allowNull: true,
         field: 'goods_images',
-        get() {
+        get: function() {
             var rawValue = this.getDataValue('goods_images');
             return rawValue ? JSON.parse(rawValue) : [];
         },
-        set(value) {
+        set: function(value) {
             this.setDataValue('goods_images', JSON.stringify(value || []));
         }
     },
@@ -75,11 +75,11 @@ var Goods = db.sequelize.define('goods', {
         allowNull: true,
         field: 'tags',
         comment: '标签：包邮、可小刀、自提、价格面议、支持自提、可租可买',
-        get() {
+        get: function() {
             var rawValue = this.getDataValue('tags');
             return rawValue ? JSON.parse(rawValue) : [];
         },
-        set(value) {
+        set: function(value) {
             this.setDataValue('tags', JSON.stringify(value || []));
         }
     },

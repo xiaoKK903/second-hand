@@ -204,19 +204,21 @@
                                     <span>{{ formatDate(scope.row.created_at) }}</span>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="操作" width="200">
+                            <el-table-column label="操作" width="220">
                                 <template slot-scope="scope">
                                     <el-button 
                                         type="text" 
                                         size="small"
-                                        @click="toggleUserRole(scope.row)">
+                                        @click="toggleUserRole(scope.row)"
+                                        :disabled="scope.row.user_id == currentAdminUid">
                                         {{ scope.row.role === 'admin' ? '取消管理员' : '设为管理员' }}
                                     </el-button>
                                     <el-button 
                                         :type="scope.row.is_active ? 'text' : 'text'"
                                         :class="scope.row.is_active ? 'danger-text' : 'success-text'"
                                         size="small"
-                                        @click="toggleUserActive(scope.row)">
+                                        @click="toggleUserActive(scope.row)"
+                                        :disabled="scope.row.user_id == currentAdminUid">
                                         {{ scope.row.is_active ? '禁用' : '启用' }}
                                     </el-button>
                                 </template>
@@ -431,6 +433,7 @@ export default {
     name: 'AdminDashboard',
     data: function() {
         return {
+            currentAdminUid: '',
             activeMenu: 'stats',
             stats: {
                 users: { total: 0, active: 0, admins: 0 },
@@ -477,6 +480,7 @@ export default {
                 this.$router.push({ name: 'adminLogin' });
                 return;
             }
+            this.currentAdminUid = adminUid;
             this.loadStats();
             this.loadUsers();
             this.loadGoods();

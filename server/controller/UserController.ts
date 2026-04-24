@@ -10,19 +10,15 @@ module.exports = {
         if (data.length) {
             var user = data[0].dataValues;
             if (user.phone_num === phone && tools.debcrypt(password, user.password)) {
-                var sid = ctx.cookies.get('sid');
-                if (ctx.cookies.get('sid')) {
-                } else {
-                    ctx.session.sid = user.user_id;
-                    ctx.cookies.set('sid', ctx.session.sid, {
-                        domain: 'localhost',
-                        path: '/',
-                        maxAge: 86400000,
-                        overwrite: false,
-                        httpOnly: false
-                    });
-                    sid = ctx.session.sid;
-                }
+                ctx.session.sid = user.user_id;
+                ctx.cookies.set('sid', ctx.session.sid, {
+                    domain: 'localhost',
+                    path: '/',
+                    maxAge: 86400000,
+                    overwrite: true,
+                    httpOnly: false
+                });
+                
                 ctx.response.type = 'charset=utf-8';
                 
                 var nickname = user.nickname;
@@ -38,7 +34,7 @@ module.exports = {
                 ctx.response.body = {
                     success: true,
                     msg: '登录成功！',
-                    sid: sid,
+                    sid: user.user_id,
                     user: {
                         user_id: user.user_id,
                         phone_num: user.phone_num,
