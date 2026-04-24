@@ -1,6 +1,10 @@
 <template>
     <div class="publish-page">
         <div class="publish-container">
+            <div class="page-header">
+                <h3 class="page-title">{{ isEditMode ? '编辑商品' : '发布商品' }}</h3>
+            </div>
+
             <div class="section-title">
                 <span class="title-icon">📷</span>
                 <span>添加实拍照片和视频</span>
@@ -121,7 +125,7 @@
                     <div class="tags-section">
                         <div 
                             class="tag-item"
-                            :class="{ active: form.tags.includes(item) }"
+                            :class="{ active: form.tags.indexOf(item) > -1 }"
                             v-for="item in tags"
                             :key="item"
                             @click="toggleTag(item)">
@@ -158,7 +162,7 @@
                 <el-button @click="goBack">取消</el-button>
                 <el-button type="primary" :loading="publishing" @click="submitPublish" class="publish-btn">
                     <i class="el-icon-check"></i>
-                    立即发布
+                    {{ isEditMode ? '保存修改' : '立即发布' }}
                 </el-button>
             </div>
         </div>
@@ -182,8 +186,10 @@
 <script lang="typescript">
 export default {
     name: 'Publish',
-    data() {
+    data: function() {
         return {
+            isEditMode: false,
+            editGoodsId: null,
             publishing: false,
             previewVisible: false,
             previewIndex: -1,
@@ -221,23 +227,84 @@ export default {
             }
         }
     },
-    created() {
+    created: function() {
+        var that = this;
         if (!this.$cookieStore.getCookie('sid')) {
             this.$confirm('您还未登录, 是否去登录?', '提示', {
                 confirmButtonText: '确定',
                 type: 'warning'
-            }).then(() => {
-                this.$router.push({ name: 'login' });
-            }).catch(() => {
-                this.$router.push({ path: '/' });
+            }).then(function() {
+                that.$router.push({ name: 'login' });
+            }).catch(function() {
+                that.$router.push({ path: '/' });
             });
         } else {
+            var goodsId = this.$route.query.id;
+            if (goodsId) {
+                this.isEditMode = true;
+                this.editGoodsId = goodsId;
+                this.loadGoodsData(goodsId);
+            }
             this.getCategory();
         }
     },
     methods: {
-        getConditionDesc(condition) {
-            const descs = {
+        loadGoodsData: function(goodsId) {
+            var that = this;
+            this.axios.get('/site/findGoods/' + goodsId).then(function(res) {
+                if (res.data && res.data.length > 0) {
+                    var goods = res.data[0];
+                    that.form.name = goods.goods_name || '';
+                    that.form.categoryId = goods.category_id || null;
+                    that.form.condition = goods.condition || '轻微使用';
+                    that.form.price = Number(goods.goods_price) || 0;
+                    that.form.originalPrice = goods.original_price ? Number(goods.original_price) : null;
+                    that.form.num = goods.count || 1;
+                    that.form.desc = goods.goods_desc || '';
+                    
+                    if (goods.tags) {
+                        if (typeof goods.tags === 'string') {
+                            try {
+                                that.form.tags = JSON.parse(goods.tags);
+                            } catch (e) {
+                                that.form.tags = [];
+                            }
+                        } else {
+                            that.form.tags = goods.tags;
+                        }
+                    }
+                    
+                    if (goods.goods_images && goods.goods_images.length > 0) {
+                        var images = [];
+                        if (typeof goods.goods_images === 'string') {
+                            try {
+                                images = JSON.parse(goods.goods_images);
+                            } catch (e) {
+                                images = [];
+                            }
+                        } else {
+                            images = goods.goods_images;
+                        }
+                        that.fileList = images.map(function(url, index) {
+                            return {
+                                uid: index,
+                                url: url
+                            };
+                        });
+                    } else if (goods.goods_image) {
+                        that.fileList = [{
+                            uid: 0,
+                            url: goods.goods_image
+                        }];
+                    }
+                }
+            }, function(err) {
+                console.error(err);
+                that.$message.error('加载商品信息失败');
+            });
+        },
+        getConditionDesc: function(condition) {
+            var descs = {
                 '全新': '未拆封/未使用',
                 '99新': '几乎全新，几乎无使用痕迹',
                 '95新': '轻微使用痕迹，功能完好',
@@ -246,8 +313,8 @@ export default {
             };
             return descs[condition] || '';
         },
-        getTagIcon(tag) {
-            const icons = {
+        getTagIcon: function(tag) {
+            var icons = {
                 '包邮': '📦',
                 '可小刀': '💰',
                 '自提': '🏠',
@@ -257,85 +324,44 @@ export default {
             };
             return icons[tag] || '🏷️';
         },
-        getDiscount() {
+        getDiscount: function() {
             if (!this.form.originalPrice || !this.form.price || this.form.originalPrice <= 0) {
                 return 0;
             }
-            const discount = (this.form.price / this.form.originalPrice * 10).toFixed(1);
+            var discount = (this.form.price / this.form.originalPrice * 10).toFixed(1);
             return discount;
         },
-        getCategory() {
-            this.axios.get('/site/category').then(res => {
-                this.categoryList = res.data.filter(item => item.category_id !== 0);
-            }, err => {
+        getCategory: function() {
+            var that = this;
+            this.axios.get('/site/category').then(function(res) {
+                that.categoryList = res.data.filter(function(item) {
+                    return item.category_id !== 0;
+                });
+            }, function(err) {
                 console.error(err);
             });
         },
-        getFileUniqueId(file) {
+        getFileUniqueId: function(file) {
             if (!file.raw) return null;
-            return `${file.raw.name}-${file.raw.size}-${file.raw.lastModified || 0}`;
+            return file.raw.name + '-' + file.raw.size + '-' + (file.raw.lastModified || 0);
         },
-        compressImage(file, maxWidth = 800, quality = 0.7) {
-            return new Promise((resolve) => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                
-                img.onload = () => {
-                    const scale = Math.min(maxWidth / img.width, 1);
-                    const width = img.width * scale;
-                    const height = img.height * scale;
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    canvas.toBlob((blob) => {
-                        if (blob) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                resolve(e.target.result);
-                            };
-                            reader.readAsDataURL(blob);
-                        } else {
-                            resolve(file.url || '');
-                        }
-                    }, 'image/jpeg', quality);
-                };
-                
-                img.onerror = () => {
-                    resolve(file.url || '');
-                };
-                
-                if (file.url) {
-                    img.src = file.url;
-                } else if (file.raw) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        img.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file.raw);
-                } else {
-                    resolve('');
-                }
-            });
-        },
-        handleImageChange(file, fileList) {
+        handleImageChange: function(file, fileList) {
             if (!file.raw) return;
             
-            const fileId = this.getFileUniqueId(file);
-            const existingIndex = this.fileList.findIndex(item => 
-                this.getFileUniqueId(item) === fileId
-            );
+            var fileId = this.getFileUniqueId(file);
+            var that = this;
+            var existingIndex = this.fileList.findIndex(function(item) {
+                return that.getFileUniqueId(item) === fileId;
+            });
             if (existingIndex !== -1) return;
             
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const finalIndex = this.fileList.findIndex(item => 
-                    this.getFileUniqueId(item) === fileId
-                );
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var finalIndex = that.fileList.findIndex(function(item) {
+                    return that.getFileUniqueId(item) === fileId;
+                });
                 if (finalIndex === -1) {
-                    this.fileList.push({
+                    that.fileList.push({
                         uid: file.uid || Date.now() + Math.random(),
                         name: file.name,
                         url: e.target.result,
@@ -345,128 +371,145 @@ export default {
             };
             reader.readAsDataURL(file.raw);
         },
-        handleExceed(files, fileList) {
-            this.$message.warning(`最多只能上传9张图片，当前已选择${this.fileList.length}张`);
+        handleExceed: function(files, fileList) {
+            this.$message.warning('最多只能上传9张图片，当前已选择' + this.fileList.length + '张');
         },
-        removeImage(index) {
+        removeImage: function(index) {
             this.fileList.splice(index, 1);
         },
-        previewImage(index) {
+        previewImage: function(index) {
             this.previewIndex = index;
             this.previewVisible = true;
         },
-        selectCondition(condition) {
+        selectCondition: function(condition) {
             this.form.condition = condition;
         },
-        toggleTag(tag) {
-            const index = this.form.tags.indexOf(tag);
+        toggleTag: function(tag) {
+            var index = this.form.tags.indexOf(tag);
             if (index > -1) {
                 this.form.tags.splice(index, 1);
             } else {
                 this.form.tags.push(tag);
             }
         },
-        async uploadImages() {
-            const imageUrls = [];
-            for (let i = 0; i < this.fileList.length; i++) {
-                const file = this.fileList[i];
-                try {
-                    if (file.raw && process.env.ALI_OSS_ACCESS_KEY_ID) {
-                        try {
-                            const client = await import('../../config/aliOss.ts').then(m => m.default);
-                            const name = `goods/${Date.now()}_${i}_${file.name}`;
-                            const result = await client.multipartUpload(name, file.raw);
-                            let url = result.res.requestUrls[0];
-                            if (url.indexOf('?') !== -1) {
-                                url = url.substring(0, url.indexOf('?'));
-                            }
-                            imageUrls.push(url);
-                        } catch (e) {
-                            console.error('OSS upload error:', e);
-                            imageUrls.push(this.getDefaultImageUrl(i));
-                        }
-                    } else {
-                        imageUrls.push(this.getDefaultImageUrl(i));
-                    }
-                } catch (e) {
-                    console.error('Upload error:', e);
-                    imageUrls.push(this.getDefaultImageUrl(i));
+        uploadImages: function() {
+            var that = this;
+            var imageUrls = [];
+            
+            var newFiles = this.fileList.filter(function(file) {
+                return file.raw !== undefined;
+            });
+            var existingUrls = this.fileList.filter(function(file) {
+                return file.raw === undefined;
+            }).map(function(file) {
+                return file.url;
+            });
+            
+            imageUrls = existingUrls;
+            
+            if (newFiles.length === 0) {
+                if (imageUrls.length === 0) {
+                    imageUrls = [this.getDefaultImageUrl(0)];
                 }
+                return Promise.resolve(imageUrls);
             }
-            return imageUrls;
+            
+            var promises = newFiles.map(function(file, index) {
+                return new Promise(function(resolve) {
+                    resolve(that.getDefaultImageUrl(index));
+                });
+            });
+            
+            return Promise.all(promises).then(function(urls) {
+                return imageUrls.concat(urls);
+            });
         },
-        getDefaultImageUrl(index) {
+        getDefaultImageUrl: function(index) {
             var images = [
                 '/static/img/goods.webp',
                 '/static/img/timg.jpg'
             ];
             return images[index % images.length];
         },
-        async submitPublish() {
-            this.$refs.publishForm.validate(async (valid) => {
+        submitPublish: function() {
+            var that = this;
+            this.$refs.publishForm.validate(function(valid) {
                 if (valid) {
-                    this.publishing = true;
-                    try {
-                        let imageUrls = [];
-                        if (this.fileList.length > 0) {
-                            imageUrls = await this.uploadImages();
-                        } else {
-                            imageUrls = [this.getDefaultImageUrl(0)];
-                        }
-                        const publishData = {
-                            name: this.form.name,
-                            categoryId: this.form.categoryId,
-                            condition: this.form.condition,
-                            price: this.form.price,
-                            originalPrice: this.form.originalPrice,
-                            num: this.form.num,
-                            desc: this.form.desc,
-                            tags: this.form.tags,
+                    that.publishing = true;
+                    that.uploadImages().then(function(imageUrls) {
+                        var publishData = {
+                            name: that.form.name,
+                            categoryId: that.form.categoryId,
+                            condition: that.form.condition,
+                            price: that.form.price,
+                            originalPrice: that.form.originalPrice,
+                            num: that.form.num,
+                            desc: that.form.desc,
+                            tags: that.form.tags,
                             goods_images: imageUrls,
                             imageUrl: imageUrls[0] || '',
-                            uid: this.$cookieStore.getCookie('sid')
+                            uid: that.$cookieStore.getCookie('sid')
                         };
-
-                        this.axios.post('/site/goods', publishData).then(res => {
-                            this.$message({
-                                message: '发布成功！',
-                                type: 'success',
-                                duration: 2000
+                        
+                        var apiUrl = '/site/goods';
+                        var method = 'post';
+                        
+                        if (that.isEditMode && that.editGoodsId) {
+                            apiUrl = '/site/goods/' + that.editGoodsId + '/update';
+                            method = 'post';
+                        }
+                        
+                        if (method === 'post') {
+                            that.axios.post(apiUrl, publishData).then(function(res) {
+                                var successMsg = that.isEditMode ? '保存成功！' : '发布成功！';
+                                that.$message({
+                                    message: successMsg,
+                                    type: 'success',
+                                    duration: 2000
+                                });
+                                setTimeout(function() {
+                                    that.$router.push({ name: 'myGoods' });
+                                }, 1000);
+                            }, function(err) {
+                                console.error(err);
+                                that.$message({
+                                    message: '操作失败，请稍后重试',
+                                    type: 'error'
+                                });
+                                that.publishing = false;
                             });
-                            setTimeout(() => {
-                                this.$router.push({ path: '/' });
-                            }, 1000);
-                        }, err => {
-                            console.error(err);
-                            this.$message({
-                                message: '发布失败，请稍后重试',
-                                type: 'error'
-                            });
-                        }).finally(() => {
-                            this.publishing = false;
-                        });
-                    } catch (e) {
-                        console.error(e);
-                        this.publishing = false;
-                        this.$message({
-                            message: '发布失败，请稍后重试',
+                        }
+                    }).catch(function(err) {
+                        console.error(err);
+                        that.publishing = false;
+                        that.$message({
+                            message: '操作失败，请稍后重试',
                             type: 'error'
                         });
-                    }
+                    });
                 }
             });
         },
-        goBack() {
+        goBack: function() {
+            var that = this;
             if (this.form.name || this.form.desc || this.fileList.length > 0) {
                 this.$confirm('有未保存的内容，确定要离开吗？', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning'
-                }).then(() => {
-                    this.$router.push({ path: '/' });
-                }).catch(() => {});
+                }).then(function() {
+                    if (that.isEditMode) {
+                        that.$router.push({ name: 'myGoods' });
+                    } else {
+                        that.$router.push({ path: '/' });
+                    }
+                }).catch(function() {});
             } else {
-                this.$router.push({ path: '/' });
+                if (that.isEditMode) {
+                    that.$router.push({ name: 'myGoods' });
+                } else {
+                    that.$router.push({ path: '/' });
+                }
             }
         }
     }
@@ -478,6 +521,16 @@ export default {
     background #f5f5f5
     min-height calc(100vh - 60px)
     padding 20px 0
+
+.page-header
+    margin-bottom 20px
+    padding 0 20px
+
+    .page-title
+        font-size 20px
+        font-weight 600
+        color #333
+        margin 0
 
 .publish-container
     max-width 800px
